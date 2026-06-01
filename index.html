@@ -1,516 +1,1094 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>ProxyHunter Mobile | MTPRoTo Edition</title>
-    <!-- Fonts -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TimePass Hub 🎮</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        mono: ['"JetBrains Mono"', 'monospace'],
-                        sans: ['"Inter"', 'sans-serif'],
-                    },
-                    colors: {
-                        bg: '#000000',
-                        panel: '#0a0a0a',
-                        border: '#1f1f1f',
-                        accent: '#00ff9d',
-                        accentDim: '#00cc7e',
-                        secondary: '#00b8ff',
-                        alert: '#ff0055',
-                        text: '#e0e0e0',
-                        textMuted: '#666666'
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            -webkit-tap-highlight-color: transparent;
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Telegram Mini App CSS variables (with fallback for web) */
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #0f0f1a);
+            --tg-surface: var(--tg-theme-secondary-bg-color, #1a1a2e);
+            --tg-surface2: var(--tg-theme-hint-color, #252542);
+            --tg-text: var(--tg-theme-text-color, #f1f5f9);
+            --tg-text-dim: var(--tg-theme-hint-color, #94a3b8);
+            --tg-button: var(--tg-theme-button-color, #7c3aed);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --bg: var(--tg-bg);
+            --surface: var(--tg-surface);
+            --surface2: #252542; /* fallback, лучше использовать hint */
+            --accent: #7c3aed;
+            --accent2: #a855f7;
+            --accent3: #ec4899;
+            --text: var(--tg-text);
+            --text-dim: var(--tg-text-dim);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius: 16px;
         }
         body {
-            background-color: #000000;
-            color: #e0e0e0;
             font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
+        /* остальные стили без изменений, кроме использования var(--bg) и т.д. */
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; overflow: hidden; pointer-events: none;
         }
-        /* 小械褌褔邪褌褘泄 褎芯薪 */
-        .bg-grid {
-            background-size: 30px 30px;
-            background-image: linear-gradient(to right, #1a1a1a 1px, transparent 1px),
-                              linear-gradient(to bottom, #1a1a1a 1px, transparent 1px);
-            opacity: 0.1;
+        .bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15;
+            animation: orbFloat 20s ease-in-out infinite;
         }
-        /* 袣邪褋褌芯屑薪褘泄 褋泻褉芯谢谢斜邪褉 */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+        .bg-orb:nth-child(1) { width: 500px; height: 500px; background: var(--accent); top: -10%; left: -10%; }
+        .bg-orb:nth-child(2) { width: 400px; height: 400px; background: var(--accent3); top: 50%; right: -10%; animation-delay: -7s; }
+        .bg-orb:nth-child(3) { width: 350px; height: 350px; background: #06b6d4; bottom: -5%; left: 30%; animation-delay: -14s; }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 40px) scale(0.9); }
         }
-        ::-webkit-scrollbar-track {
-            background: #0a0a0a;
+        .app-container { position: relative; z-index: 1; }
+        header {
+            text-align: center; padding: 40px 20px 20px;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 4px;
+        header h1 {
+            font-size: 3rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--accent2), var(--accent3), #f97316);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 8px;
         }
-        /* 袗薪懈屑邪褑懈褟 锌芯褟胁谢械薪懈褟 褋褌褉芯泻懈 */
-        .row-enter {
-            animation: slideIn 0.25s ease-out forwards;
+        header p { color: var(--text-dim); font-size: 1.1rem; }
+        .activity-nav {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+            padding: 20px; max-width: 900px; margin: 0 auto;
         }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .nav-btn {
+            padding: 10px 20px; border: 2px solid var(--surface2); background: var(--surface);
+            color: var(--text); border-radius: 50px; cursor: pointer; font-size: 0.9rem;
+            font-weight: 600; transition: all 0.3s; font-family: inherit;
+            display: flex; align-items: center; gap: 8px;
         }
-        /* 小褌懈谢懈 写谢褟 谢芯谐芯胁 */
-        .log-info {
-            color: #00b8ff;
-            border-left-color: #00b8ff;
+        .nav-btn:hover { border-color: var(--accent2); background: color-mix(in srgb, var(--surface) 80%, white); transform: translateY(-2px); }
+        .nav-btn.active { border-color: var(--accent2); background: linear-gradient(135deg, var(--accent), var(--accent3)); color: #fff; }
+        .nav-btn .emoji { font-size: 1.2rem; }
+        .activity-container {
+            max-width: 900px; margin: 0 auto; padding: 20px;
+            min-height: 500px;
         }
-        .log-success {
-            color: #00ff9d;
-            border-left-color: #00ff9d;
+        .activity-panel {
+            display: none; animation: fadeSlideIn 0.4s ease;
         }
-        .log-warn {
-            color: #ffcc00;
-            border-left-color: #ffcc00;
+        .activity-panel.active { display: block; }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .log-error {
-            color: #ff0055;
-            border-left-color: #ff0055;
+        .card {
+            background: var(--surface); border: 1px solid var(--surface2);
+            border-radius: var(--radius); padding: 30px; margin-bottom: 20px;
         }
-        .log-entry {
-            border-left: 2px solid transparent;
-            padding-left: 10px;
-            margin-bottom: 6px;
-            font-size: 11px;
-            word-break: break-word;
+        .card h2 { font-size: 1.5rem; margin-bottom: 8px; }
+        .card p { color: var(--text-dim); margin-bottom: 20px; }
+        .btn {
+            padding: 12px 28px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
         }
-        /* 袣薪芯锌泻懈 锌褉芯褌芯泻芯谢芯胁 胁 褋褌懈谢械 褔懈锌芯胁 */
-        .proto-chip {
-            transition: all 0.2s ease;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            color: #fff;
         }
-        .proto-chip.active {
-            background-color: rgba(0, 255, 157, 0.15);
-            border-color: #00ff9d;
-            color: #00ff9d;
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
+        .btn-secondary {
+            background: var(--surface2); color: var(--text);
         }
-        /* 袗写邪锌褌懈胁薪褘械 芯褌褋褌褍锌褘 */
-        @media (max-width: 640px) {
-            .container-padding {
-                padding-left: 12px;
-                padding-right: 12px;
-            }
+        .btn-secondary:hover { background: #333366; }
+        .score-display {
+            font-size: 3rem; font-weight: 900; text-align: center;
+            background: linear-gradient(135deg, var(--accent2), var(--accent3));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin: 15px 0;
+        }
+        .stats-row {
+            display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin: 15px 0;
+        }
+        .stat-box {
+            background: var(--surface2); padding: 12px 24px; border-radius: 12px; text-align: center;
+        }
+        .stat-box .val { font-size: 1.5rem; font-weight: 700; color: var(--accent2); }
+        .stat-box .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Bubble Pop */
+        #bubbleCanvas { width: 100%; height: 450px; border-radius: var(--radius); cursor: crosshair; display: block; background: var(--surface); }
+
+        /* Drawing Pad */
+        .draw-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
+        .color-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .color-btn:hover, .color-btn.active { border-color: #fff; transform: scale(1.2); }
+        .brush-size { width: 120px; accent-color: var(--accent2); }
+        #drawCanvas {
+            width: 100%; height: 450px; border-radius: var(--radius);
+            background: var(--surface); cursor: crosshair; display: block;
+        }
+
+        /* Reaction Test */
+        .reaction-box {
+            width: 100%; height: 350px; border-radius: var(--radius);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700; cursor: pointer;
+            transition: background 0.3s; user-select: none; text-align: center; padding: 20px;
+        }
+        .reaction-box.waiting { background: var(--danger); }
+        .reaction-box.ready { background: var(--success); }
+        .reaction-box.idle { background: var(--surface2); }
+        .reaction-box.too-soon { background: var(--warning); }
+
+        /* Color Match */
+        .color-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px; margin: 20px 0;
+        }
+        .color-tile {
+            height: 120px; border-radius: 12px; cursor: pointer;
+            transition: all 0.3s; border: 3px solid transparent;
+        }
+        .color-tile:hover { transform: scale(1.05); }
+        .color-tile.correct { border-color: var(--success); box-shadow: 0 0 20px rgba(34,197,94,0.4); }
+        .color-tile.wrong { border-color: var(--danger); opacity: 0.5; }
+
+        /* Tic Tac Toe */
+        .ttt-board {
+            display: grid; grid-template-columns: repeat(3, 120px);
+            gap: 10px; justify-content: center; margin: 20px 0;
+        }
+        .ttt-cell {
+            width: 120px; height: 120px; background: var(--surface2);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 800; cursor: pointer; transition: all 0.2s;
+            border: none; color: var(--text);
+        }
+        .ttt-cell:hover { background: #333366; }
+        .ttt-cell.x { color: var(--accent2); }
+        .ttt-cell.o { color: var(--accent3); }
+        .ttt-status { text-align: center; font-size: 1.2rem; font-weight: 600; margin: 10px 0; }
+
+        /* Whack-a-Mole */
+        .mole-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 15px; max-width: 450px; margin: 0 auto;
+        }
+        .mole-hole {
+            aspect-ratio: 1; background: var(--surface2); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; cursor: pointer; transition: all 0.15s;
+            border: 3px solid transparent; user-select: none;
+        }
+        .mole-hole:hover { transform: scale(1.05); }
+        .mole-hole.active { background: #f59e0b33; border-color: var(--warning); transform: scale(1.1); }
+        .mole-hole.hit { background: rgba(34,197,94,0.3); border-color: var(--success); }
+
+        /* Memory Game */
+        .memory-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 10px; max-width: 500px; margin: 0 auto;
+        }
+        .memory-card {
+            aspect-ratio: 1; background: var(--surface2); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; cursor: pointer; transition: all 0.3s;
+            border: 2px solid transparent; user-select: none;
+        }
+        .memory-card:hover { border-color: var(--accent2); }
+        .memory-card.flipped { background: var(--accent); transform: rotateY(180deg); }
+        .memory-card.matched { background: var(--success); border-color: var(--success); }
+
+        /* Typing Test */
+        .typing-text {
+            background: var(--surface2); padding: 20px; border-radius: 12px;
+            font-size: 1.1rem; line-height: 1.8; margin-bottom: 15px;
+            word-spacing: 3px; letter-spacing: 0.5px;
+        }
+        .typing-text .correct { color: var(--success); }
+        .typing-text .incorrect { color: var(--danger); background: rgba(239,68,68,0.2); border-radius: 3px; }
+        .typing-text .current { border-bottom: 2px solid var(--accent2); }
+        #typingInput {
+            width: 100%; padding: 15px 20px; background: var(--surface2);
+            border: 2px solid var(--surface2); border-radius: 12px;
+            color: var(--text); font-size: 1.1rem; font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        #typingInput:focus { outline: none; border-color: var(--accent2); }
+
+        /* Coin Flip */
+        .coin {
+            width: 150px; height: 150px; border-radius: 50%; margin: 30px auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; font-weight: 900; cursor: pointer;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #78350f; transition: transform 0.3s;
+            box-shadow: 0 8px 30px rgba(245,158,11,0.3);
+        }
+        .coin:hover { transform: scale(1.1); }
+        .coin.flipping { animation: coinFlip 0.6s ease-in-out; }
+        @keyframes coinFlip {
+            0% { transform: rotateX(0); }
+            50% { transform: rotateX(900deg) scale(0.8); }
+            100% { transform: rotateX(1800deg); }
+        }
+        .coin-result { text-align: center; font-size: 1.5rem; font-weight: 700; margin: 10px 0; min-height: 40px; }
+
+        /* Dice Roll */
+        .dice-container { display: flex; gap: 20px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        .dice {
+            width: 100px; height: 100px; background: #fff; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900; color: var(--bg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: all 0.3s;
+        }
+        .dice.rolling { animation: diceRoll 0.5s ease-in-out; }
+        @keyframes diceRoll {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(15deg) scale(1.1); }
+            50% { transform: rotate(-15deg) scale(0.9); }
+            75% { transform: rotate(10deg) scale(1.05); }
+        }
+
+        /* Number Guess */
+        .guess-input {
+            width: 200px; padding: 15px; background: var(--surface2); border: 2px solid var(--surface2);
+            border-radius: 12px; color: var(--text); font-size: 1.5rem; font-weight: 700;
+            text-align: center; font-family: inherit;
+        }
+        .guess-input:focus { outline: none; border-color: var(--accent2); }
+        .guess-hint {
+            text-align: center; font-size: 1.2rem; font-weight: 600;
+            margin: 15px 0; min-height: 30px;
+        }
+        .guess-history { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 15px; }
+        .guess-tag {
+            padding: 5px 14px; background: var(--surface2); border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600;
+        }
+        .guess-tag.high { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .guess-tag.low { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .guess-tag.win { background: rgba(34,197,94,0.2); color: var(--success); }
+
+        .text-center { text-align: center; }
+        .mt-15 { margin-top: 15px; }
+        .flex-center { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .ttt-board { grid-template-columns: repeat(3, 90px); }
+            .ttt-cell { width: 90px; height: 90px; font-size: 2rem; }
+            .memory-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+            .memory-card { font-size: 1.3rem; }
+            .mole-grid { gap: 8px; }
+            .mole-hole { font-size: 2rem; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
         }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden relative">
+<body>
+    <div class="bg-animation">
+        <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+    </div>
+    <div class="app-container">
+        <header>
+            <h1>🎮 TimePass Hub</h1>
+            <p>Pick an activity and kill some time!</p>
+        </header>
+        <nav class="activity-nav">
+            <button class="nav-btn active" onclick="showActivity('bubble', this)"><span class="emoji">🫧</span> Bubble Pop</button>
+            <button class="nav-btn" onclick="showActivity('draw', this)"><span class="emoji">🎨</span> Draw</button>
+            <button class="nav-btn" onclick="showActivity('reaction', this)"><span class="emoji">⚡</span> Reaction</button>
+            <button class="nav-btn" onclick="showActivity('color', this)"><span class="emoji">🎯</span> Color Match</button>
+            <button class="nav-btn" onclick="showActivity('ttt', this)"><span class="emoji">❌</span> Tic Tac Toe</button>
+            <button class="nav-btn" onclick="showActivity('mole', this)"><span class="emoji">🐹</span> Whack-a-Mole</button>
+            <button class="nav-btn" onclick="showActivity('memory', this)"><span class="emoji">🧠</span> Memory</button>
+            <button class="nav-btn" onclick="showActivity('typing', this)"><span class="emoji">⌨️</span> Typing</button>
+            <button class="nav-btn" onclick="showActivity('coin', this)"><span class="emoji">🪙</span> Coin Flip</button>
+            <button class="nav-btn" onclick="showActivity('dice', this)"><span class="emoji">🎲</span> Dice Roll</button>
+            <button class="nav-btn" onclick="showActivity('guess', this)"><span class="emoji">🔢</span> Number Guess</button>
+        </nav>
 
-    <!-- 肖芯薪芯胁褘泄 褋谢芯泄 褋 褋械褌泻芯泄 -->
-    <div class="absolute inset-0 bg-grid pointer-events-none z-0"></div>
-    <div class="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-accent to-transparent opacity-40"></div>
-
-    <!-- 楔袗袩袣袗 (邪写邪锌褌懈胁薪邪褟) -->
-    <header class="h-14 border-b border-border bg-black/90 backdrop-blur flex items-center justify-between px-4 shrink-0 z-20">
-        <div class="flex items-center gap-2">
-            <div class="w-2 h-2 bg-accent rounded-sm animate-pulse shadow-[0_0_8px_#00ff9d]"></div>
-            <h1 class="text-sm font-bold tracking-tight text-white">
-                Proxy<span class="text-accent">Hunter</span> 
-                <span class="text-[10px] text-zinc-500 font-normal ml-1">MTPRoTo</span>
-            </h1>
-        </div>
-        <div class="flex gap-4 text-[9px] font-mono">
-            <div class="text-right">
-                <div class="text-zinc-600">袩袪袨袣小袠</div>
-                <div id="proxy-count" class="text-accent text-base font-bold leading-tight">0</div>
-            </div>
-            <div class="text-right">
-                <div class="text-zinc-600">袚袨孝袨袙袨</div>
-                <div id="sys-status" class="text-zinc-500 text-xs">袨袞袠袛袗袧袠袝</div>
-            </div>
-        </div>
-    </header>
-
-    <!-- 袨小袧袨袙袧袗携 袨袘袥袗小孝鞋 -->
-    <div class="flex flex-1 overflow-hidden relative z-10 flex-col">
-        
-        <!-- 袙袝袪啸袧携携 袩袗袧袝袥鞋 校袩袪袗袙袥袝袧袠携 (褋泻褉芯谢谢懈褌褋褟 锌芯 谐芯褉懈蟹芯薪褌邪谢懈 锌褉懈 薪械芯斜褏芯写懈屑芯褋褌懈) -->
-        <div class="border-b border-border bg-panel/50 px-4 py-3 shrink-0 overflow-x-auto whitespace-nowrap no-scrollbar">
-            <div class="flex gap-2 items-center">
-                <!-- 袣薪芯锌泻懈 胁褘斜芯褉邪 锌褉芯褌芯泻芯谢邪 (MTPRoTo + SOCKS5/HTTP) -->
-                <button onclick="setProtocol('mtpro')" id="proto-mtpro" class="proto-chip active px-4 py-1.5 rounded-full border border-accent text-accent text-xs font-bold transition">
-                    MTPRoTo
-                </button>
-                <button onclick="setProtocol('socks')" id="proto-socks" class="proto-chip px-4 py-1.5 rounded-full border border-zinc-700 text-zinc-400 text-xs font-bold transition">
-                    SOCKS5
-                </button>
-                <button onclick="setProtocol('http')" id="proto-http" class="proto-chip px-4 py-1.5 rounded-full border border-zinc-700 text-zinc-400 text-xs font-bold transition">
-                    HTTP/HTTPS
-                </button>
-                
-                <div class="w-px h-5 bg-zinc-800 mx-1"></div>
-                
-                <!-- 袣薪芯锌泻邪 芯斜薪芯胁谢械薪懈褟 -->
-                <button onclick="fetchProxies()" id="btn-fetch" class="bg-accent/10 border border-accent/30 text-accent px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 active:scale-95 transition">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    袟袗袚袪校袟袠孝鞋
-                </button>
-                
-                <!-- 袣薪芯锌泻邪 褝泻褋锌芯褉褌邪 -->
-                <button onclick="exportProxies()" class="border border-zinc-700 text-zinc-300 px-3 py-1.5 rounded-full text-xs flex items-center gap-1 active:scale-95 transition">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    EXPORT
-                </button>
-            </div>
-        </div>
-
-        <!-- 袨小袧袨袙袧袨袡 袣袨袧孝袝袧孝: 褋锌懈褋芯泻 锌褉芯泻褋懈 -->
-        <div class="flex-1 overflow-auto relative">
-            <!-- 孝邪斜谢懈褑邪 (薪邪 屑芯斜懈谢泻械 谢褍褔褕械 胁褘谐谢褟写懈褌 泻邪泻 褋锌懈褋芯泻) -->
-            <div class="divide-y divide-border/50">
-                <div id="proxies-list" class="font-mono text-[11px]">
-                    <!-- 小褞写邪 写懈薪邪屑懈褔械褋泻懈 斜褍写褍褌 写芯斜邪胁谢褟褌褜褋褟 锌褉芯泻褋懈 -->
+        <div class="activity-container">
+            <!-- Bubble Pop -->
+            <div id="panel-bubble" class="activity-panel active">
+                <div class="card">
+                    <h2>🫧 Bubble Pop</h2>
+                    <p>Click the bubbles before they float away! How many can you pop?</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="bubbleScore">0</div><div class="label">Score</div></div>
+                        <div class="stat-box"><div class="val" id="bubbleTime">30</div><div class="label">Seconds</div></div>
+                        <div class="stat-box"><div class="val" id="bubbleBest">0</div><div class="label">Best</div></div>
+                    </div>
+                    <canvas id="bubbleCanvas"></canvas>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startBubbleGame()">Start Game</button>
+                    </div>
                 </div>
             </div>
-            
-            <!-- 袩褍褋褌芯械 褋芯褋褌芯褟薪懈械 -->
-            <div id="empty-state" class="absolute inset-0 flex items-center justify-center text-zinc-700 flex-col gap-3 pointer-events-none">
-                <svg class="w-12 h-12 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                <span class="text-xs uppercase tracking-wider">小锌懈褋芯泻 锌褍褋褌</span>
-                <span class="text-[10px] text-zinc-600">袧邪卸屑懈褌械 芦袟袗袚袪校袟袠孝鞋禄</span>
-            </div>
-        </div>
 
-        <!-- 袣袨袧小袨袥鞋 (袥袨袚袠) - 褍屑械薪褜褕械薪薪邪褟 写谢褟 屑芯斜懈谢泻懈 -->
-        <div class="h-36 border-t border-border bg-black/90 flex flex-col shrink-0">
-            <div class="h-7 flex items-center justify-between px-3 border-b border-border bg-black/50">
-                <span class="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">馃摗 袥袨袚袠</span>
-                <button onclick="clearLog()" class="text-[9px] text-zinc-600 active:text-zinc-300">袨效袠小孝袠孝鞋</button>
+            <!-- Drawing Pad -->
+            <div id="panel-draw" class="activity-panel">
+                <div class="card">
+                    <h2>🎨 Drawing Pad</h2>
+                    <p>Express yourself! Draw anything you like.</p>
+                    <div class="draw-controls">
+                        <button class="color-btn active" style="background:#fff" onclick="setDrawColor('#ffffff', this)"></button>
+                        <button class="color-btn" style="background:#ef4444" onclick="setDrawColor('#ef4444', this)"></button>
+                        <button class="color-btn" style="background:#3b82f6" onclick="setDrawColor('#3b82f6', this)"></button>
+                        <button class="color-btn" style="background:#22c55e" onclick="setDrawColor('#22c55e', this)"></button>
+                        <button class="color-btn" style="background:#f59e0b" onclick="setDrawColor('#f59e0b', this)"></button>
+                        <button class="color-btn" style="background:#a855f7" onclick="setDrawColor('#a855f7', this)"></button>
+                        <button class="color-btn" style="background:#ec4899" onclick="setDrawColor('#ec4899', this)"></button>
+                        <input type="range" class="brush-size" min="1" max="30" value="4" id="brushSize" title="Brush Size">
+                        <button class="btn btn-secondary" onclick="clearCanvas()">🗑️ Clear</button>
+                    </div>
+                    <canvas id="drawCanvas"></canvas>
+                </div>
             </div>
-            <div id="console-log" class="flex-1 overflow-y-auto p-2 space-y-1 font-mono text-[10px]">
-                <div class="log-entry log-info">[小袠小孝袝袦袗] ProxyHunter MTPRoTo 谐芯褌芯胁. 袙褘斜械褉懈褌械 锌褉芯褌芯泻芯谢 懈 薪邪卸屑懈褌械 蟹邪谐褉褍蟹泻褍.</div>
+
+            <!-- Reaction Test -->
+            <div id="panel-reaction" class="activity-panel">
+                <div class="card">
+                    <h2>⚡ Reaction Time Test</h2>
+                    <p>Wait for green, then click as fast as you can!</p>
+                    <div class="score-display" id="reactionResult">---</div>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="reactionAvg">---</div><div class="label">Average</div></div>
+                        <div class="stat-box"><div class="val" id="reactionBest">---</div><div class="label">Best</div></div>
+                        <div class="stat-box"><div class="val" id="reactionAttempts">0</div><div class="label">Attempts</div></div>
+                    </div>
+                    <div class="reaction-box idle" id="reactionBox" onclick="reactionClick()">
+                        Click to Start
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Match -->
+            <div id="panel-color" class="activity-panel">
+                <div class="card">
+                    <h2>🎯 Color Match</h2>
+                    <p>Find the tile that matches the target color name!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="colorScore">0</div><div class="label">Score</div></div>
+                        <div class="stat-box"><div class="val" id="colorStreak">0</div><div class="label">Streak</div></div>
+                        <div class="stat-box"><div class="val" id="colorTimer">30</div><div class="label">Time</div></div>
+                    </div>
+                    <div id="colorTarget" style="text-align:center;font-size:1.3rem;font-weight:700;margin:10px 0;"></div>
+                    <div class="color-grid" id="colorGrid"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startColorGame()">Start Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tic Tac Toe -->
+            <div id="panel-ttt" class="activity-panel">
+                <div class="card">
+                    <h2>❌⭕ Tic Tac Toe</h2>
+                    <p>Play against a friend!</p>
+                    <div class="ttt-status" id="tttStatus">X's Turn</div>
+                    <div class="ttt-board" id="tttBoard"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="resetTTT()">New Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Whack-a-Mole -->
+            <div id="panel-mole" class="activity-panel">
+                <div class="card">
+                    <h2>🐹 Whack-a-Mole</h2>
+                    <p>Whack the moles as they pop up!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="moleScore">0</div><div class="label">Score</div></div>
+                        <div class="stat-box"><div class="val" id="moleTime">30</div><div class="label">Time</div></div>
+                        <div class="stat-box"><div class="val" id="moleBest">0</div><div class="label">Best</div></div>
+                    </div>
+                    <div class="mole-grid" id="moleGrid"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startMoleGame()">Start Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory -->
+            <div id="panel-memory" class="activity-panel">
+                <div class="card">
+                    <h2>🧠 Memory Game</h2>
+                    <p>Find all matching pairs!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="memoryMoves">0</div><div class="label">Moves</div></div>
+                        <div class="stat-box"><div class="val" id="memoryPairs">0</div><div class="label">Pairs</div></div>
+                    </div>
+                    <div class="memory-grid" id="memoryGrid"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startMemoryGame()">New Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing -->
+            <div id="panel-typing" class="activity-panel">
+                <div class="card">
+                    <h2>⌨️ Typing Speed Test</h2>
+                    <p>Type the text below as fast and accurately as you can!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="typingWPM">0</div><div class="label">WPM</div></div>
+                        <div class="stat-box"><div class="val" id="typingAccuracy">100%</div><div class="label">Accuracy</div></div>
+                        <div class="stat-box"><div class="val" id="typingTime">0</div><div class="label">Seconds</div></div>
+                    </div>
+                    <div class="typing-text" id="typingText"></div>
+                    <input type="text" id="typingInput" placeholder="Start typing here..." oninput="handleTyping()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="resetTyping()">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coin Flip -->
+            <div id="panel-coin" class="activity-panel">
+                <div class="card">
+                    <h2>🪙 Coin Flip</h2>
+                    <p>Click the coin to flip it!</p>
+                    <div class="coin-result" id="coinResult"></div>
+                    <div class="coin" id="coinEl" onclick="flipCoin()">🪙</div>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="coinHeads">0</div><div class="label">Heads</div></div>
+                        <div class="stat-box"><div class="val" id="coinTails">0</div><div class="label">Tails</div></div>
+                        <div class="stat-box"><div class="val" id="coinTotal">0</div><div class="label">Total</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dice Roll -->
+            <div id="panel-dice" class="activity-panel">
+                <div class="card">
+                    <h2>🎲 Dice Roller</h2>
+                    <p>Roll the dice and see what you get!</p>
+                    <div class="dice-container" id="diceContainer"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="rollDice()">🎲 Roll Dice</button>
+                    </div>
+                    <div class="stats-row mt-15">
+                        <div class="stat-box"><div class="val" id="diceTotal">0</div><div class="label">Total Rolled</div></div>
+                        <div class="stat-box"><div class="val" id="diceHighest">0</div><div class="label">Highest</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Number Guess -->
+            <div id="panel-guess" class="activity-panel">
+                <div class="card">
+                    <h2>🔢 Number Guess</h2>
+                    <p>I'm thinking of a number between 1 and 100. Can you guess it?</p>
+                    <div class="score-display" id="guessRange">1 - 100</div>
+                    <div class="guess-hint" id="guessHint">Make your first guess!</div>
+                    <div class="text-center">
+                        <input type="number" class="guess-input" id="guessInput" min="1" max="100" placeholder="?" onkeydown="if(event.key==='Enter')makeGuess()">
+                    </div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="makeGuess()">Guess</button>
+                        <button class="btn btn-secondary" onclick="resetGuess()">New Game</button>
+                    </div>
+                    <div class="guess-history" id="guessHistory"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // ============================================================
-        // 袦袨袛校袥鞋 1: 袠小孝袨效袧袠袣袠 袛袗袧袧蝎啸 (褉械邪谢褜薪褘械 URL)
-        // ============================================================
-        // 袠褋褌芯褔薪懈泻懈 锌褉芯泻褋懈 褉邪蟹写械谢械薪褘 锌芯 锌褉芯褌芯泻芯谢邪屑.
-        // 袣邪卸写褘泄 懈褋褌芯褔薪懈泻 - 褝褌芯 芯斜褗械泻褌 褋 name, url, active (锌芯 褍屑芯谢褔邪薪懈褞 true)
-        // 袙褋械 褋褋褘谢泻懈 胁械写褍褌 薪邪 褉械邪谢褜薪褘械 raw-褎邪泄谢褘 GitHub 褋 锌褉芯泻褋懈-谢懈褋褌邪屑懈
+        // Инициализация Telegram Mini App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Растягиваем на весь экран
         
-        const PROXY_SOURCES = {
-            // MTPRoTo - 褋锌械褑懈邪谢懈蟹懈褉芯胁邪薪薪褘械 褋锌懈褋泻懈 褋 斜褘褋褌褉褘屑懈 锌褉芯泻褋懈 (懈屑懈褌邪褑懈褟, 薪芯 URL 褉械邪谢褜薪褘械)
-            mtpro: [
-                { name: "Roosterkid SOCKS5 (斜褘褋褌褉褘械)", url: "https://raw.githubusercontent.com/roosterkid/openproxylist/main/SOCKS5_RAW.txt", active: true },
-                { name: "TheSpeedX SOCKS5", url: "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt", active: true },
-                { name: "ProxyList SOCKS5", url: "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/socks5.txt", active: true }
-            ],
-            socks: [
-                { name: "Roosterkid SOCKS5", url: "https://raw.githubusercontent.com/roosterkid/openproxylist/main/SOCKS5_RAW.txt", active: true },
-                { name: "TheSpeedX SOCKS5", url: "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt", active: true },
-                { name: "Hookzof SOCKS5", url: "https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt", active: true }
-            ],
-            http: [
-                { name: "Roosterkid HTTPS", url: "https://raw.githubusercontent.com/roosterkid/openproxylist/main/HTTPS_RAW.txt", active: true },
-                { name: "TheSpeedX HTTP", url: "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt", active: true },
-                { name: "ProxyList HTTP", url: "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt", active: true }
-            ]
-        };
-
-        // 袚谢芯斜邪谢褜薪芯械 褋芯褋褌芯褟薪懈械 锌褉懈谢芯卸械薪懈褟
-        let currentProtocol = 'mtpro';      // 孝械泻褍褖懈泄 胁褘斜褉邪薪薪褘泄 锌褉芯褌芯泻芯谢: 'mtpro', 'socks', 'http'
-        let proxyDatabase = [];              // 袦邪褋褋懈胁 芯斜褗械泻褌芯胁 锌褉芯泻褋懈 { id, type, endpoint, source }
-        let isLoading = false;               // 肖谢邪谐 蟹邪谐褉褍蟹泻懈 写谢褟 斜谢芯泻懈褉芯胁泻懈 锌芯胁褌芯褉薪褘褏 薪邪卸邪褌懈泄
-
-        // ============================================================
-        // 袦袨袛校袥鞋 2: 袠袧袠笑袠袗袥袠袟袗笑袠携 袠 袩袝袪袝袣袥挟效袝袧袠袝 袩袪袨孝袨袣袨袥袨袙
-        // ============================================================
-        
-        // 肖褍薪泻褑懈褟 锌械褉械泻谢褞褔械薪懈褟 锌褉芯褌芯泻芯谢邪 (胁褘蟹褘胁邪械褌褋褟 锌褉懈 薪邪卸邪褌懈懈 薪邪 褔懈锌)
-        function setProtocol(protocol) {
-            if (isLoading) {
-                addLog("小薪邪褔邪谢邪 写芯卸写懈褌械褋褜 蟹邪胁械褉褕械薪懈褟 蟹邪谐褉褍蟹泻懈", "warn");
-                return;
-            }
-            currentProtocol = protocol;
-            
-            // 袨斜薪芯胁谢褟械屑 胁懈蟹褍邪谢褜薪芯械 褋芯褋褌芯褟薪懈械 褔懈锌芯胁
-            document.querySelectorAll('.proto-chip').forEach(chip => {
-                chip.classList.remove('active', 'border-accent', 'text-accent', 'bg-accent/10');
-                chip.classList.add('border-zinc-700', 'text-zinc-400');
-            });
-            const activeChip = document.getElementById(`proto-${protocol}`);
-            if (activeChip) {
-                activeChip.classList.add('active', 'border-accent', 'text-accent', 'bg-accent/10');
-                activeChip.classList.remove('border-zinc-700', 'text-zinc-400');
-            }
-            
-            // 袨褔懈褖邪械屑 褌械泻褍褖懈泄 褋锌懈褋芯泻 锌褉芯泻褋懈 懈 锌械褉械褉懈褋芯胁褘胁邪械屑 锌褍褋褌褘屑
-            proxyDatabase = [];
-            renderProxiesList();
-            addLog(`袩械褉械泻谢褞褔械薪芯 薪邪 锌褉芯褌芯泻芯谢: ${protocol.toUpperCase()}`, "info");
-        }
-        
-        // ============================================================
-        // 袦袨袛校袥鞋 3: 袟袗袚袪校袟袣袗 袩袪袨袣小袠 袠袟 袪袝袗袥鞋袧蝎啸 袠小孝袨效袧袠袣袨袙
-        // ============================================================
-        
-        async function fetchProxies() {
-            if (isLoading) {
-                addLog("袟邪谐褉褍蟹泻邪 褍卸械 胁褘锌芯谢薪褟械褌褋褟...", "warn");
-                return;
-            }
-            
-            // 袩芯谢褍褔邪械屑 褋锌懈褋芯泻 懈褋褌芯褔薪懈泻芯胁 写谢褟 胁褘斜褉邪薪薪芯谐芯 锌褉芯褌芯泻芯谢邪
-            const sources = PROXY_SOURCES[currentProtocol];
-            if (!sources || sources.length === 0) {
-                addLog("袧械褌 写芯褋褌褍锌薪褘褏 懈褋褌芯褔薪懈泻芯胁 写谢褟 褝褌芯谐芯 锌褉芯褌芯泻芯谢邪", "error");
-                return;
-            }
-            
-            // 袗泻褌懈胁懈褉褍械屑 褋芯褋褌芯褟薪懈械 蟹邪谐褉褍蟹泻懈
-            isLoading = true;
-            const fetchBtn = document.getElementById('btn-fetch');
-            fetchBtn.disabled = true;
-            fetchBtn.classList.add('opacity-50');
-            fetchBtn.innerHTML = `
-                <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                袟袗袚袪校袟袣袗...
-            `;
-            document.getElementById('sys-status').innerText = '袟袗袚袪校袟袣袗';
-            document.getElementById('sys-status').classList.add('text-accent');
-            
-            // 袨褔懈褖邪械屑 褋褌邪褉褘械 写邪薪薪褘械
-            proxyDatabase = [];
-            renderProxiesList();
-            addLog(`袧邪褔懈薪邪械屑 蟹邪谐褉褍蟹泻褍 锌褉芯泻褋懈 写谢褟 锌褉芯褌芯泻芯谢邪 ${currentProtocol.toUpperCase()}...`, "info");
-            
-            let totalLoaded = 0;
-            
-            // 袩芯褋谢械写芯胁邪褌械谢褜薪芯 蟹邪谐褉褍卸邪械屑 泻邪卸写褘泄 懈褋褌芯褔薪懈泻
-            for (const source of sources) {
-                if (!source.active) continue;
-                
-                try {
-                    addLog(`袟邪谐褉褍蟹泻邪: ${source.name}`, "info");
-                    // 袪械邪谢褜薪褘泄 HTTP-蟹邪锌褉芯褋 泻 raw-褎邪泄谢褍 GitHub
-                    const response = await fetch(source.url);
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-                    
-                    const text = await response.text();
-                    // 袩邪褉褋懈屑 褋褌褉芯泻懈: 褉邪蟹斜懈胁邪械屑 锌芯 锌械褉械薪芯褋邪屑, 褍斜懈褉邪械屑 锌褍褋褌褘械 懈 泻芯屑屑械薪褌邪褉懈懈 (#)
-                    const lines = text.split(/\r?\n/);
-                    let parsedCount = 0;
-                    
-                    for (const line of lines) {
-                        let proxy = line.trim();
-                        // 袩褉芯锌褍褋泻邪械屑 锌褍褋褌褘械 褋褌褉芯泻懈 懈 泻芯屑屑械薪褌邪褉懈懈
-                        if (proxy === '' || proxy.startsWith('#')) continue;
-                        
-                        // 袨锌褉械写械谢褟械屑 褌懈锌 锌褉芯泻褋懈 薪邪 芯褋薪芯胁械 胁褘斜褉邪薪薪芯谐芯 锌褉芯褌芯泻芯谢邪
-                        let type = currentProtocol === 'mtpro' ? 'MTPRoTo' : 
-                                   (currentProtocol === 'socks' ? 'SOCKS5' : 'HTTP');
-                        
-                        // 袛谢褟 MTPRoTo 芯褋褌邪胁谢褟械屑 泻邪泻 械褋褌褜, 薪芯 屑芯卸薪芯 写芯斜邪胁懈褌褜 锌褉械褎懈泻褋
-                        if (currentProtocol === 'mtpro' && !proxy.includes('://')) {
-                            proxy = `mtproto://${proxy}`;
-                        }
-                        
-                        // 袛芯斜邪胁谢褟械屑 锌褉芯泻褋懈 胁 斜邪蟹褍
-                        proxyDatabase.push({
-                            id: Math.random().toString(36).substr(2, 8),
-                            type: type,
-                            endpoint: proxy,
-                            source: source.name,
-                            raw: proxy
-                        });
-                        parsedCount++;
-                    }
-                    
-                    totalLoaded += parsedCount;
-                    addLog(`鉁� ${source.name} 鈫� 蟹邪谐褉褍卸械薪芯 ${parsedCount} 锌褉芯泻褋懈`, "success");
-                    
-                } catch (err) {
-                    addLog(`鉁� 袨褕懈斜泻邪 锌褉懈 蟹邪谐褉褍蟹泻械 ${source.name}: ${err.message}`, "error");
+        // При изменении темы можно принудительно обновить стили (CSS переменные уже подхватятся)
+        tg.onEvent('themeChanged', () => {
+            // Просто перерисовываем canvas при необходимости
+            if (document.getElementById('panel-bubble').classList.contains('active')) {
+                resizeBubbleCanvas();
+                if (bubbleGameActive) {
+                    // Обновить отрисовку пузырей
+                    cancelAnimationFrame(bubbleAnimFrame);
+                    drawBubbles();
                 }
-                
-                // 袧械斜芯谢褜褕邪褟 蟹邪写械褉卸泻邪 屑械卸写褍 蟹邪锌褉芯褋邪屑懈, 褔褌芯斜褘 薪械 锌械褉械谐褉褍卸邪褌褜 GitHub API
-                await new Promise(resolve => setTimeout(resolve, 300));
             }
-            
-            // 袨斜薪芯胁谢褟械屑 懈薪褌械褉褎械泄褋 锌芯褋谢械 蟹邪谐褉褍蟹泻懈
-            isLoading = false;
-            fetchBtn.disabled = false;
-            fetchBtn.classList.remove('opacity-50');
-            fetchBtn.innerHTML = `
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-                袟袗袚袪校袟袠孝鞋
-            `;
-            document.getElementById('sys-status').innerText = '袚袨孝袨袙袨';
-            document.getElementById('sys-status').classList.remove('text-accent');
-            
-            // 袪械薪写械褉懈屑 懈褌芯谐芯胁褘泄 褋锌懈褋芯泻
-            renderProxiesList();
-            addLog(`鉁� 袟邪谐褉褍蟹泻邪 蟹邪胁械褉褕械薪邪. 袩芯谢褍褔械薪芯 ${proxyDatabase.length} 锌褉芯泻褋懈.`, "success");
+            if (document.getElementById('panel-draw').classList.contains('active')) {
+                resizeDrawCanvas();
+            }
+        });
+        
+        // Поддержка кнопки "Назад" в Telegram
+        tg.BackButton.onClick(() => {
+            // Можно реализовать логику, но по умолчанию закрываем приложение
+            tg.close();
+        });
+        // Показываем кнопку назад (опционально, если есть куда возвращаться)
+        // tg.BackButton.show();
+        
+        // Остальной код без изменений, кроме использования переменных темы и корректировки canvas
+        // ===== Navigation =====
+        function showActivity(name, btnElement) {
+            document.querySelectorAll('.activity-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            if (btnElement) btnElement.classList.add('active');
+            if (name === 'bubble') setTimeout(resizeBubbleCanvas, 50);
+            if (name === 'draw') setTimeout(resizeDrawCanvas, 50);
         }
-        
-        // ============================================================
-        // 袦袨袛校袥鞋 4: 袨孝袨袘袪袗袞袝袧袠袝 袩袪袨袣小袠 袙 MOBILE-小袩袠小袣袝
-        // ============================================================
-        
-        function renderProxiesList() {
-            const container = document.getElementById('proxies-list');
-            const emptyState = document.getElementById('empty-state');
-            
-            if (!proxyDatabase.length) {
-                container.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                document.getElementById('proxy-count').innerText = '0';
+
+        // ===== Bubble Pop =====
+        let bubbleScore = 0, bubbleTimer = 30, bubbleInterval, bubbleAnimFrame;
+        let bubbleBest = 0;
+        const bubbleCanvas = document.getElementById('bubbleCanvas');
+        const bubbleCtx = bubbleCanvas.getContext('2d');
+        let bubbles = [], bubbleGameActive = false;
+
+        function resizeBubbleCanvas() {
+            const rect = bubbleCanvas.getBoundingClientRect();
+            bubbleCanvas.width = rect.width || 860;
+            bubbleCanvas.height = 450;
+        }
+        window.addEventListener('load', () => {
+            resizeBubbleCanvas();
+            resizeDrawCanvas();
+        });
+        window.addEventListener('resize', () => {
+            resizeBubbleCanvas();
+            resizeDrawCanvas();
+        });
+        setTimeout(resizeBubbleCanvas, 100);
+
+        function createBubble() {
+            if (!bubbleGameActive) return;
+            const colors = ['#7c3aed','#ec4899','#06b6d4','#f59e0b','#22c55e','#ef4444','#8b5cf6','#f97316'];
+            const size = 30 + Math.random() * 40;
+            bubbles.push({
+                x: Math.random() * (bubbleCanvas.width - size * 2) + size,
+                y: bubbleCanvas.height + size,
+                size, speed: 1 + Math.random() * 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: 0.02 + Math.random() * 0.03
+            });
+            setTimeout(createBubble, 300 + Math.random() * 400);
+        }
+
+        function drawBubbles() {
+            bubbleCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+            bubbles = bubbles.filter(b => {
+                b.y -= b.speed;
+                b.wobble += b.wobbleSpeed;
+                b.x += Math.sin(b.wobble) * 1.5;
+                bubbleCtx.beginPath();
+                bubbleCtx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                bubbleCtx.fillStyle = b.color + '88';
+                bubbleCtx.fill();
+                bubbleCtx.strokeStyle = b.color;
+                bubbleCtx.lineWidth = 2;
+                bubbleCtx.stroke();
+                bubbleCtx.beginPath();
+                bubbleCtx.arc(b.x - b.size * 0.3, b.y - b.size * 0.3, b.size * 0.15, 0, Math.PI * 2);
+                bubbleCtx.fillStyle = 'rgba(255,255,255,0.5)';
+                bubbleCtx.fill();
+                return b.y + b.size > 0;
+            });
+            bubbleAnimFrame = requestAnimationFrame(drawBubbles);
+        }
+
+        bubbleCanvas.addEventListener('click', (e) => {
+            if (!bubbleGameActive) return;
+            const rect = bubbleCanvas.getBoundingClientRect();
+            const scaleX = bubbleCanvas.width / rect.width;
+            const scaleY = bubbleCanvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                const dx = mx - b.x, dy = my - b.y;
+                if (dx * dx + dy * dy < b.size * b.size) {
+                    bubbles.splice(i, 1);
+                    bubbleScore += Math.round(50 / b.size * 10);
+                    document.getElementById('bubbleScore').textContent = bubbleScore;
+                    break;
+                }
+            }
+        });
+
+        function startBubbleGame() {
+            bubbleScore = 0; bubbleTimer = 30;
+            bubbles = []; bubbleGameActive = true;
+            document.getElementById('bubbleScore').textContent = '0';
+            document.getElementById('bubbleTime').textContent = '30';
+            clearInterval(bubbleInterval);
+            cancelAnimationFrame(bubbleAnimFrame);
+            resizeBubbleCanvas();
+            drawBubbles();
+            createBubble();
+            bubbleInterval = setInterval(() => {
+                bubbleTimer--;
+                document.getElementById('bubbleTime').textContent = bubbleTimer;
+                if (bubbleTimer <= 0) {
+                    bubbleGameActive = false;
+                    clearInterval(bubbleInterval);
+                    cancelAnimationFrame(bubbleAnimFrame);
+                    bubbleCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+                    bubbleCtx.fillStyle = 'rgba(0,0,0,0.6)';
+                    bubbleCtx.fillRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+                    bubbleCtx.fillStyle = '#fff';
+                    bubbleCtx.font = 'bold 36px Inter';
+                    bubbleCtx.textAlign = 'center';
+                    bubbleCtx.fillText(`Score: ${bubbleScore}`, bubbleCanvas.width/2, bubbleCanvas.height/2);
+                    if (bubbleScore > bubbleBest) {
+                        bubbleBest = bubbleScore;
+                        document.getElementById('bubbleBest').textContent = bubbleBest;
+                    }
+                }
+            }, 1000);
+        }
+
+        // ===== Drawing Pad =====
+        const drawCanvas = document.getElementById('drawCanvas');
+        const drawCtx = drawCanvas.getContext('2d');
+        let drawing = false, drawColor = '#ffffff';
+
+        function resizeDrawCanvas() {
+            const rect = drawCanvas.getBoundingClientRect();
+            drawCanvas.width = rect.width || 860;
+            drawCanvas.height = 450;
+            drawCtx.lineCap = 'round'; drawCtx.lineJoin = 'round';
+        }
+        setTimeout(resizeDrawCanvas, 100);
+
+        function getDrawPos(e) {
+            const rect = drawCanvas.getBoundingClientRect();
+            const touch = e.touches ? e.touches[0] : e;
+            const scaleX = drawCanvas.width / rect.width;
+            const scaleY = drawCanvas.height / rect.height;
+            return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+        }
+
+        drawCanvas.addEventListener('mousedown', (e) => { drawing = true; const p = getDrawPos(e); drawCtx.beginPath(); drawCtx.moveTo(p.x, p.y); });
+        drawCanvas.addEventListener('mousemove', (e) => { if (!drawing) return; const p = getDrawPos(e); drawCtx.strokeStyle = drawColor; drawCtx.lineWidth = document.getElementById('brushSize').value; drawCtx.lineTo(p.x, p.y); drawCtx.stroke(); });
+        drawCanvas.addEventListener('mouseup', () => drawing = false);
+        drawCanvas.addEventListener('mouseleave', () => drawing = false);
+        drawCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; const p = getDrawPos(e); drawCtx.beginPath(); drawCtx.moveTo(p.x, p.y); }, {passive:false});
+        drawCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (!drawing) return; const p = getDrawPos(e); drawCtx.strokeStyle = drawColor; drawCtx.lineWidth = document.getElementById('brushSize').value; drawCtx.lineTo(p.x, p.y); drawCtx.stroke(); }, {passive:false});
+        drawCanvas.addEventListener('touchend', () => drawing = false);
+
+        function setDrawColor(c, el) {
+            drawColor = c;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function clearCanvas() {
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        }
+
+        // ===== Reaction Test =====
+        let reactionState = 'idle', reactionTimeout, reactionStart, reactionTimes = [];
+
+        function reactionClick() {
+            const box = document.getElementById('reactionBox');
+            if (reactionState === 'idle' || reactionState === 'result') {
+                reactionState = 'waiting';
+                box.className = 'reaction-box waiting';
+                box.textContent = 'Wait for green...';
+                reactionTimeout = setTimeout(() => {
+                    reactionState = 'ready';
+                    box.className = 'reaction-box ready';
+                    box.textContent = 'CLICK NOW!';
+                    reactionStart = Date.now();
+                }, 1500 + Math.random() * 3000);
+            } else if (reactionState === 'waiting') {
+                clearTimeout(reactionTimeout);
+                reactionState = 'idle';
+                box.className = 'reaction-box too-soon';
+                box.textContent = 'Too soon! Click to try again';
+            } else if (reactionState === 'ready') {
+                const time = Date.now() - reactionStart;
+                reactionTimes.push(time);
+                reactionState = 'result';
+                box.className = 'reaction-box idle';
+                box.textContent = `${time}ms — Click to try again`;
+                document.getElementById('reactionResult').textContent = time + 'ms';
+                document.getElementById('reactionAttempts').textContent = reactionTimes.length;
+                const avg = Math.round(reactionTimes.reduce((a,b) => a+b, 0) / reactionTimes.length);
+                document.getElementById('reactionAvg').textContent = avg + 'ms';
+                const best = Math.min(...reactionTimes);
+                document.getElementById('reactionBest').textContent = best + 'ms';
+            }
+        }
+
+        // ===== Color Match =====
+        let colorScoreVal = 0, colorStreak = 0, colorTimerVal = 30, colorTimerInt, colorGameActive = false;
+        const colorNames = ['Red','Blue','Green','Yellow','Purple','Orange','Pink','Cyan','Lime','Coral','Teal','Gold','Violet','Indigo','Salmon'];
+        const colorHexes = ['#ef4444','#3b82f6','#22c55e','#eab308','#8b5cf6','#f97316','#ec4899','#06b6d4','#84cc16','#f87171','#14b8a6','#fbbf24','#a78bfa','#6366f1','#fb923c'];
+
+        function startColorGame() {
+            colorScoreVal = 0; colorStreak = 0; colorTimerVal = 30; colorGameActive = true;
+            document.getElementById('colorScore').textContent = '0';
+            document.getElementById('colorStreak').textContent = '0';
+            document.getElementById('colorTimer').textContent = '30';
+            clearInterval(colorTimerInt);
+            colorTimerInt = setInterval(() => {
+                colorTimerVal--;
+                document.getElementById('colorTimer').textContent = colorTimerVal;
+                if (colorTimerVal <= 0) {
+                    clearInterval(colorTimerInt);
+                    colorGameActive = false;
+                    document.getElementById('colorTarget').textContent = `Game Over! Score: ${colorScoreVal}`;
+                    document.getElementById('colorGrid').innerHTML = '';
+                }
+            }, 1000);
+            nextColorRound();
+        }
+
+        function nextColorRound() {
+            if (!colorGameActive) return;
+            const targetIdx = Math.floor(Math.random() * colorNames.length);
+            const shuffled = [...Array(colorHexes.length).keys()].sort(() => Math.random() - 0.5).slice(0, 6);
+            if (!shuffled.includes(targetIdx)) shuffled[Math.floor(Math.random() * 6)] = targetIdx;
+
+            document.getElementById('colorTarget').innerHTML = `Find: <span style="color:${colorHexes[targetIdx]}">${colorNames[targetIdx]}</span>`;
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            shuffled.forEach((idx, i) => {
+                const tile = document.createElement('div');
+                tile.className = 'color-tile';
+                tile.style.background = colorHexes[idx];
+                tile.onclick = () => {
+                    if (!colorGameActive) return;
+                    if (idx === targetIdx) {
+                        tile.classList.add('correct');
+                        colorScoreVal += 10 + colorStreak * 2;
+                        colorStreak++;
+                        document.getElementById('colorScore').textContent = colorScoreVal;
+                        document.getElementById('colorStreak').textContent = colorStreak;
+                        setTimeout(nextColorRound, 400);
+                    } else {
+                        tile.classList.add('wrong');
+                        colorStreak = 0;
+                        document.getElementById('colorStreak').textContent = '0';
+                    }
+                };
+                grid.appendChild(tile);
+            });
+        }
+
+        // ===== Tic Tac Toe =====
+        let tttBoard, tttTurn, tttGameOver;
+        function resetTTT() {
+            tttBoard = Array(9).fill(null); tttTurn = 'X'; tttGameOver = false;
+            document.getElementById('tttStatus').textContent = "X's Turn";
+            const board = document.getElementById('tttBoard');
+            board.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'ttt-cell';
+                cell.onclick = () => tttMove(i);
+                board.appendChild(cell);
+            }
+        }
+        function tttMove(i) {
+            if (tttBoard[i] || tttGameOver) return;
+            tttBoard[i] = tttTurn;
+            const cells = document.querySelectorAll('.ttt-cell');
+            cells[i].textContent = tttTurn;
+            cells[i].classList.add(tttTurn.toLowerCase());
+            const winner = checkTTTWin();
+            if (winner) {
+                tttGameOver = true;
+                document.getElementById('tttStatus').textContent = `${winner} Wins! 🎉`;
                 return;
             }
-            
-            emptyState.classList.add('hidden');
-            document.getElementById('proxy-count').innerText = proxyDatabase.length;
-            
-            // 小褌褉芯懈屑 HTML 写谢褟 泻邪卸写芯谐芯 锌褉芯泻褋懈 (泻邪褉褌芯褔泻邪 写谢褟 屑芯斜懈谢泻懈)
+            if (tttBoard.every(c => c)) {
+                tttGameOver = true;
+                document.getElementById('tttStatus').textContent = "It's a Draw! 🤝";
+                return;
+            }
+            tttTurn = tttTurn === 'X' ? 'O' : 'X';
+            document.getElementById('tttStatus').textContent = `${tttTurn}'s Turn`;
+        }
+        function checkTTTWin() {
+            const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (const [a,b,c] of lines) {
+                if (tttBoard[a] && tttBoard[a] === tttBoard[b] && tttBoard[b] === tttBoard[c]) return tttBoard[a];
+            }
+            return null;
+        }
+        resetTTT();
+
+        // ===== Whack-a-Mole =====
+        let moleScoreVal = 0, moleTimerVal = 30, moleInterval, molePopInterval, moleGameActive = false, moleBest = 0;
+
+        function startMoleGame() {
+            moleScoreVal = 0; moleTimerVal = 30; moleGameActive = true;
+            document.getElementById('moleScore').textContent = '0';
+            document.getElementById('moleTime').textContent = '30';
+            clearInterval(moleInterval); clearInterval(molePopInterval);
+            const grid = document.getElementById('moleGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'mole-hole';
+                hole.id = 'mole-' + i;
+                hole.textContent = '🕳️';
+                hole.onclick = () => whackMole(i);
+                grid.appendChild(hole);
+            }
+            molePopInterval = setInterval(popMole, 800);
+            moleInterval = setInterval(() => {
+                moleTimerVal--;
+                document.getElementById('moleTime').textContent = moleTimerVal;
+                if (moleTimerVal <= 0) {
+                    moleGameActive = false;
+                    clearInterval(moleInterval); clearInterval(molePopInterval);
+                    if (moleScoreVal > moleBest) {
+                        moleBest = moleScoreVal;
+                        document.getElementById('moleBest').textContent = moleBest;
+                    }
+                    document.getElementById('moleGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;font-size:1.5rem;font-weight:700;">Game Over! Score: ${moleScoreVal}</div>`;
+                }
+            }, 1000);
+        }
+
+        let activeMole = -1;
+        function popMole() {
+            if (!moleGameActive) return;
+            document.querySelectorAll('.mole-hole').forEach(h => { h.classList.remove('active'); h.textContent = '🕳️'; });
+            activeMole = Math.floor(Math.random() * 9);
+            const hole = document.getElementById('mole-' + activeMole);
+            hole.classList.add('active');
+            hole.textContent = '🐹';
+        }
+
+        function whackMole(i) {
+            if (!moleGameActive || i !== activeMole) return;
+            const hole = document.getElementById('mole-' + i);
+            hole.classList.remove('active');
+            hole.classList.add('hit');
+            hole.textContent = '💥';
+            moleScoreVal += 10;
+            document.getElementById('moleScore').textContent = moleScoreVal;
+            activeMole = -1;
+            setTimeout(() => { hole.classList.remove('hit'); hole.textContent = '🕳️'; }, 300);
+        }
+
+        // ===== Memory Game =====
+        let memoryCards, memoryFlipped, memoryMatched, memoryMoves, memoryLocked;
+        const memoryEmojis = ['🎮','🎲','🎯','🎪','🎨','🎭','🎵','🎸'];
+
+        function startMemoryGame() {
+            memoryMoves = 0; memoryMatched = 0; memoryFlipped = []; memoryLocked = false;
+            document.getElementById('memoryMoves').textContent = '0';
+            document.getElementById('memoryPairs').textContent = '0';
+            const pairs = [...memoryEmojis, ...memoryEmojis];
+            memoryCards = pairs.sort(() => Math.random() - 0.5);
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            memoryCards.forEach((emoji, i) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.index = i;
+                card.dataset.emoji = emoji;
+                card.textContent = '❓';
+                card.onclick = () => flipMemoryCard(i);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipMemoryCard(i) {
+            if (memoryLocked) return;
+            const cards = document.querySelectorAll('.memory-card');
+            const card = cards[i];
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            card.classList.add('flipped');
+            card.textContent = card.dataset.emoji;
+            memoryFlipped.push({ index: i, card, emoji: card.dataset.emoji });
+            if (memoryFlipped.length === 2) {
+                memoryMoves++;
+                document.getElementById('memoryMoves').textContent = memoryMoves;
+                memoryLocked = true;
+                const [a, b] = memoryFlipped;
+                if (a.emoji === b.emoji) {
+                    a.card.classList.add('matched');
+                    b.card.classList.add('matched');
+                    memoryMatched++;
+                    document.getElementById('memoryPairs').textContent = memoryMatched;
+                    memoryFlipped = [];
+                    memoryLocked = false;
+                    if (memoryMatched === memoryEmojis.length) {
+                        setTimeout(() => alert(`🎉 You won in ${memoryMoves} moves!`), 300);
+                    }
+                } else {
+                    setTimeout(() => {
+                        a.card.classList.remove('flipped'); a.card.textContent = '❓';
+                        b.card.classList.remove('flipped'); b.card.textContent = '❓';
+                        memoryFlipped = [];
+                        memoryLocked = false;
+                    }, 800);
+                }
+            }
+        }
+        startMemoryGame();
+
+        // ===== Typing Test =====
+        const typingTexts = [
+            "The quick brown fox jumps over the lazy dog near the riverbank on a sunny afternoon",
+            "Programming is the art of telling a computer what to do step by step with precision",
+            "Time flies when you are having fun playing games and exploring new things online",
+            "The mountains stood tall against the sky while the wind whispered through the trees",
+            "Learning to code opens up a world of possibilities and creative problem solving skills"
+        ];
+        let currentText, typingStart, typingActive = false, correctChars = 0;
+
+        function resetTyping() {
+            currentText = typingTexts[Math.floor(Math.random() * typingTexts.length)];
+            typingStart = null; typingActive = false; correctChars = 0;
+            document.getElementById('typingWPM').textContent = '0';
+            document.getElementById('typingAccuracy').textContent = '100%';
+            document.getElementById('typingTime').textContent = '0';
+            document.getElementById('typingInput').value = '';
+            document.getElementById('typingInput').disabled = false;
+            renderTypingText('');
+        }
+
+        function renderTypingText(typed) {
+            const el = document.getElementById('typingText');
             let html = '';
-            proxyDatabase.forEach((proxy, idx) => {
-                // 肖芯褉屑懈褉褍械屑 芯褌芯斜褉邪卸邪械屑褘泄 邪写褉械褋 (芯斜褉械蟹邪械屑 写谢褟 褔懈褌邪械屑芯褋褌懈)
-                let displayEndpoint = proxy.endpoint;
-                if (displayEndpoint.length > 45) {
-                    displayEndpoint = displayEndpoint.substring(0, 42) + '...';
+            for (let i = 0; i < currentText.length; i++) {
+                if (i < typed.length) {
+                    html += typed[i] === currentText[i]
+                        ? `<span class="correct">${currentText[i]}</span>`
+                        : `<span class="incorrect">${currentText[i]}</span>`;
+                } else if (i === typed.length) {
+                    html += `<span class="current">${currentText[i]}</span>`;
+                } else {
+                    html += currentText[i];
                 }
-                
-                html += `
-                    <div class="row-enter px-4 py-3 border-b border-border/30 hover:bg-white/5 transition-all" data-id="${proxy.id}">
-                        <div class="flex justify-between items-start gap-2">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 flex-wrap mb-1">
-                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-zinc-900 text-accent border border-accent/30">${proxy.type}</span>
-                                    <span class="text-[9px] text-zinc-600">${proxy.source || '懈褋褌芯褔薪懈泻'}</span>
-                                </div>
-                                <div class="text-xs font-mono text-zinc-300 break-all select-all" onclick="copyToClipboard('${proxy.raw.replace(/'/g, "\\'")}')">
-                                    ${displayEndpoint}
-                                </div>
-                            </div>
-                            <button onclick="copyToClipboard('${proxy.raw.replace(/'/g, "\\'")}')" class="shrink-0 text-zinc-500 active:text-accent p-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-        
-        // ============================================================
-        // 袦袨袛校袥鞋 5: 协袣小袩袨袪孝 袩袪袨袣小袠 袙 肖袗袡袥
-        // ============================================================
-        
-        function exportProxies() {
-            if (proxyDatabase.length === 0) {
-                addLog("袧械褌 写邪薪薪褘褏 写谢褟 褝泻褋锌芯褉褌邪. 小薪邪褔邪谢邪 蟹邪谐褉褍蟹懈褌械 锌褉芯泻褋懈.", "warn");
-                return;
             }
-            
-            // 肖芯褉屑懈褉褍械屑 褋芯写械褉卸懈屑芯械: 锌褉芯褋褌芯 褋锌懈褋芯泻 raw-褋褌褉芯泻
-            const content = proxyDatabase.map(p => p.raw).join('\n');
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `proxyhunter_${currentProtocol}_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            addLog(`协泻褋锌芯褉褌懈褉芯胁邪薪芯 ${proxyDatabase.length} 锌褉芯泻褋懈 胁 褎邪泄谢`, "success");
+            el.innerHTML = html;
         }
-        
-        // 袣芯锌懈褉芯胁邪薪懈械 胁 斜褍褎械褉 芯斜屑械薪邪
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                addLog(`小泻芯锌懈褉芯胁邪薪芯: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`, "success");
-            }).catch(() => {
-                addLog("袧械 褍写邪谢芯褋褜 褋泻芯锌懈褉芯胁邪褌褜", "error");
-            });
-        }
-        
-        // ============================================================
-        // 袦袨袛校袥鞋 6: 袥袨袚袠袪袨袙袗袧袠袝 小袨袨袘些袝袧袠袡
-        // ============================================================
-        
-        function addLog(message, type = 'info') {
-            const consoleEl = document.getElementById('console-log');
-            const entry = document.createElement('div');
-            entry.className = `log-entry log-${type}`;
-            const time = new Date().toLocaleTimeString('ru-RU', { hour12: false, hour: '2-digit', minute:'2-digit', second:'2-digit' });
-            entry.innerHTML = `<span class="text-zinc-600">[${time}]</span> ${message}`;
-            consoleEl.appendChild(entry);
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-            
-            // 袨谐褉邪薪懈褔懈胁邪械屑 泻芯谢懈褔械褋褌胁芯 谢芯谐芯胁 (芯褋褌邪胁谢褟械屑 锌芯褋谢械写薪懈械 50)
-            while (consoleEl.children.length > 50) {
-                consoleEl.removeChild(consoleEl.firstChild);
+
+        function handleTyping() {
+            const input = document.getElementById('typingInput');
+            if (!typingStart) { typingStart = Date.now(); typingActive = true; }
+            renderTypingText(input.value);
+            correctChars = 0;
+            for (let i = 0; i < input.value.length; i++) {
+                if (input.value[i] === currentText[i]) correctChars++;
+            }
+            const elapsed = (Date.now() - typingStart) / 1000;
+            const mins = elapsed / 60;
+            const wpm = mins > 0 ? Math.round((correctChars / 5) / mins) : 0;
+            const accuracy = input.value.length > 0 ? Math.round((correctChars / input.value.length) * 100) : 100;
+            document.getElementById('typingWPM').textContent = wpm;
+            document.getElementById('typingAccuracy').textContent = accuracy + '%';
+            document.getElementById('typingTime').textContent = Math.round(elapsed);
+            if (input.value.length >= currentText.length) {
+                typingActive = false;
+                document.getElementById('typingInput').disabled = true;
             }
         }
-        
-        function clearLog() {
-            const consoleEl = document.getElementById('console-log');
-            consoleEl.innerHTML = '<div class="log-entry log-info">[小袠小孝袝袦袗] 袥芯谐懈 芯褔懈褖械薪褘.</div>';
+        resetTyping();
+
+        // ===== Coin Flip =====
+        let headsCount = 0, tailsCount = 0;
+        function flipCoin() {
+            const coin = document.getElementById('coinEl');
+            const result = document.getElementById('coinResult');
+            coin.classList.remove('flipping');
+            void coin.offsetWidth;
+            coin.classList.add('flipping');
+            result.textContent = '';
+            setTimeout(() => {
+                const isHeads = Math.random() > 0.5;
+                if (isHeads) { headsCount++; coin.textContent = '👑'; result.textContent = '👑 HEADS!'; }
+                else { tailsCount++; coin.textContent = '🌊'; result.textContent = '🌊 TAILS!'; }
+                document.getElementById('coinHeads').textContent = headsCount;
+                document.getElementById('coinTails').textContent = tailsCount;
+                document.getElementById('coinTotal').textContent = headsCount + tailsCount;
+            }, 600);
         }
-        
-        // ============================================================
-        // 袦袨袛校袥鞋 7: 小孝袗袪孝 袩袪袠袥袨袞袝袧袠携
-        // ============================================================
-        
-        // 袠薪懈褑懈邪谢懈蟹邪褑懈褟: 褍褋褌邪薪邪胁谢懈胁邪械屑 邪泻褌懈胁薪褘泄 锌褉芯褌芯泻芯谢 锌芯 褍屑芯谢褔邪薪懈褞
-        setProtocol('mtpro');
-        
-        // 协泻褋锌芯褉褌懈褉褍械屑 褎褍薪泻褑懈懈 胁 谐谢芯斜邪谢褜薪褍褞 芯斜谢邪褋褌褜 写谢褟 胁褘蟹芯胁邪 懈蟹 HTML
-        window.setProtocol = setProtocol;
-        window.fetchProxies = fetchProxies;
-        window.exportProxies = exportProxies;
-        window.copyToClipboard = copyToClipboard;
-        window.clearLog = clearLog;
-        
-        addLog("袩褉懈谢芯卸械薪懈械 懈薪懈褑懈邪谢懈蟹懈褉芯胁邪薪芯. MTPRoTo 胁褘斜褉邪薪 锌芯 褍屑芯谢褔邪薪懈褞.", "info");
+
+        // ===== Dice Roll =====
+        const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+        let diceTotalRolls = 0, diceHighestRoll = 0;
+
+        function rollDice() {
+            const container = document.getElementById('diceContainer');
+            container.innerHTML = '';
+            const numDice = 2;
+            for (let i = 0; i < numDice; i++) {
+                const dice = document.createElement('div');
+                dice.className = 'dice rolling';
+                const val = Math.floor(Math.random() * 6) + 1;
+                dice.textContent = diceFaces[val - 1];
+                setTimeout(() => dice.classList.remove('rolling'), 500);
+                container.appendChild(dice);
+            }
+            const singleTotal = Array.from(container.children).reduce((s, d) => {
+                return s + (diceFaces.indexOf(d.textContent) + 1);
+            }, 0);
+            diceTotalRolls += singleTotal;
+            if (singleTotal > diceHighestRoll) diceHighestRoll = singleTotal;
+            document.getElementById('diceTotal').textContent = diceTotalRolls;
+            document.getElementById('diceHighest').textContent = diceHighestRoll;
+        }
+        rollDice();
+
+        // ===== Number Guess =====
+        let secretNum, guessAttempts, guessLow, guessHigh;
+        function resetGuess() {
+            secretNum = Math.floor(Math.random() * 100) + 1;
+            guessAttempts = 0; guessLow = 1; guessHigh = 100;
+            document.getElementById('guessRange').textContent = '1 - 100';
+            document.getElementById('guessHint').textContent = 'Make your first guess!';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessHistory').innerHTML = '';
+            document.getElementById('guessInput').disabled = false;
+        }
+        function makeGuess() {
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+            if (isNaN(guess) || guess < 1 || guess > 100) return;
+            input.value = '';
+            guessAttempts++;
+            const hint = document.getElementById('guessHint');
+            const history = document.getElementById('guessHistory');
+            if (guess === secretNum) {
+                hint.textContent = `🎉 Correct! It was ${secretNum}! (${guessAttempts} attempts)`;
+                history.innerHTML += `<span class="guess-tag win">${guess} ✓</span>`;
+                document.getElementById('guessInput').disabled = true;
+            } else if (guess < secretNum) {
+                hint.textContent = '📈 Higher!';
+                history.innerHTML += `<span class="guess-tag low">${guess} ↑</span>`;
+                if (guess >= guessLow) guessLow = guess + 1;
+            } else {
+                hint.textContent = '📉 Lower!';
+                history.innerHTML += `<span class="guess-tag high">${guess} ↓</span>`;
+                if (guess <= guessHigh) guessHigh = guess - 1;
+            }
+            document.getElementById('guessRange').textContent = `${guessLow} - ${guessHigh}`;
+        }
+        resetGuess();
     </script>
 </body>
 </html>
