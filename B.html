@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TimePass Hub 🎮</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        /* Telegram Mini App CSS variables (with fallback for web) */
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #0f0f1a);
+            --tg-surface: var(--tg-theme-secondary-bg-color, #1a1a2e);
+            --tg-surface2: var(--tg-theme-hint-color, #252542);
+            --tg-text: var(--tg-theme-text-color, #f1f5f9);
+            --tg-text-dim: var(--tg-theme-hint-color, #94a3b8);
+            --tg-button: var(--tg-theme-button-color, #7c3aed);
+            --tg-button-text: var(--tg-theme-button-text-color, #ffffff);
+            --bg: var(--tg-bg);
+            --surface: var(--tg-surface);
+            --surface2: #252542; /* fallback, лучше использовать hint */
+            --accent: #7c3aed;
+            --accent2: #a855f7;
+            --accent3: #ec4899;
+            --text: var(--tg-text);
+            --text-dim: var(--tg-text-dim);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius: 16px;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* остальные стили без изменений, кроме использования var(--bg) и т.д. */
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; overflow: hidden; pointer-events: none;
+        }
+        .bg-orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-orb:nth-child(1) { width: 500px; height: 500px; background: var(--accent); top: -10%; left: -10%; }
+        .bg-orb:nth-child(2) { width: 400px; height: 400px; background: var(--accent3); top: 50%; right: -10%; animation-delay: -7s; }
+        .bg-orb:nth-child(3) { width: 350px; height: 350px; background: #06b6d4; bottom: -5%; left: 30%; animation-delay: -14s; }
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 40px) scale(0.9); }
+        }
+        .app-container { position: relative; z-index: 1; }
+        header {
+            text-align: center; padding: 40px 20px 20px;
+        }
+        header h1 {
+            font-size: 3rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--accent2), var(--accent3), #f97316);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 8px;
+        }
+        header p { color: var(--text-dim); font-size: 1.1rem; }
+        .activity-nav {
+            display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+            padding: 20px; max-width: 900px; margin: 0 auto;
+        }
+        .nav-btn {
+            padding: 10px 20px; border: 2px solid var(--surface2); background: var(--surface);
+            color: var(--text); border-radius: 50px; cursor: pointer; font-size: 0.9rem;
+            font-weight: 600; transition: all 0.3s; font-family: inherit;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .nav-btn:hover { border-color: var(--accent2); background: color-mix(in srgb, var(--surface) 80%, white); transform: translateY(-2px); }
+        .nav-btn.active { border-color: var(--accent2); background: linear-gradient(135deg, var(--accent), var(--accent3)); color: #fff; }
+        .nav-btn .emoji { font-size: 1.2rem; }
+        .activity-container {
+            max-width: 900px; margin: 0 auto; padding: 20px;
+            min-height: 500px;
+        }
+        .activity-panel {
+            display: none; animation: fadeSlideIn 0.4s ease;
+        }
+        .activity-panel.active { display: block; }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: var(--surface); border: 1px solid var(--surface2);
+            border-radius: var(--radius); padding: 30px; margin-bottom: 20px;
+        }
+        .card h2 { font-size: 1.5rem; margin-bottom: 8px; }
+        .card p { color: var(--text-dim); margin-bottom: 20px; }
+        .btn {
+            padding: 12px 28px; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            font-family: inherit; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent3));
+            color: #fff;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4); }
+        .btn-secondary {
+            background: var(--surface2); color: var(--text);
+        }
+        .btn-secondary:hover { background: #333366; }
+        .score-display {
+            font-size: 3rem; font-weight: 900; text-align: center;
+            background: linear-gradient(135deg, var(--accent2), var(--accent3));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin: 15px 0;
+        }
+        .stats-row {
+            display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin: 15px 0;
+        }
+        .stat-box {
+            background: var(--surface2); padding: 12px 24px; border-radius: 12px; text-align: center;
+        }
+        .stat-box .val { font-size: 1.5rem; font-weight: 700; color: var(--accent2); }
+        .stat-box .label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Bubble Pop */
+        #bubbleCanvas { width: 100%; height: 450px; border-radius: var(--radius); cursor: crosshair; display: block; background: var(--surface); }
+
+        /* Drawing Pad */
+        .draw-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; }
+        .color-btn {
+            width: 36px; height: 36px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .color-btn:hover, .color-btn.active { border-color: #fff; transform: scale(1.2); }
+        .brush-size { width: 120px; accent-color: var(--accent2); }
+        #drawCanvas {
+            width: 100%; height: 450px; border-radius: var(--radius);
+            background: var(--surface); cursor: crosshair; display: block;
+        }
+
+        /* Reaction Test */
+        .reaction-box {
+            width: 100%; height: 350px; border-radius: var(--radius);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700; cursor: pointer;
+            transition: background 0.3s; user-select: none; text-align: center; padding: 20px;
+        }
+        .reaction-box.waiting { background: var(--danger); }
+        .reaction-box.ready { background: var(--success); }
+        .reaction-box.idle { background: var(--surface2); }
+        .reaction-box.too-soon { background: var(--warning); }
+
+        /* Color Match */
+        .color-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px; margin: 20px 0;
+        }
+        .color-tile {
+            height: 120px; border-radius: 12px; cursor: pointer;
+            transition: all 0.3s; border: 3px solid transparent;
+        }
+        .color-tile:hover { transform: scale(1.05); }
+        .color-tile.correct { border-color: var(--success); box-shadow: 0 0 20px rgba(34,197,94,0.4); }
+        .color-tile.wrong { border-color: var(--danger); opacity: 0.5; }
+
+        /* Tic Tac Toe */
+        .ttt-board {
+            display: grid; grid-template-columns: repeat(3, 120px);
+            gap: 10px; justify-content: center; margin: 20px 0;
+        }
+        .ttt-cell {
+            width: 120px; height: 120px; background: var(--surface2);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 800; cursor: pointer; transition: all 0.2s;
+            border: none; color: var(--text);
+        }
+        .ttt-cell:hover { background: #333366; }
+        .ttt-cell.x { color: var(--accent2); }
+        .ttt-cell.o { color: var(--accent3); }
+        .ttt-status { text-align: center; font-size: 1.2rem; font-weight: 600; margin: 10px 0; }
+
+        /* Whack-a-Mole */
+        .mole-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 15px; max-width: 450px; margin: 0 auto;
+        }
+        .mole-hole {
+            aspect-ratio: 1; background: var(--surface2); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; cursor: pointer; transition: all 0.15s;
+            border: 3px solid transparent; user-select: none;
+        }
+        .mole-hole:hover { transform: scale(1.05); }
+        .mole-hole.active { background: #f59e0b33; border-color: var(--warning); transform: scale(1.1); }
+        .mole-hole.hit { background: rgba(34,197,94,0.3); border-color: var(--success); }
+
+        /* Memory Game */
+        .memory-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 10px; max-width: 500px; margin: 0 auto;
+        }
+        .memory-card {
+            aspect-ratio: 1; background: var(--surface2); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; cursor: pointer; transition: all 0.3s;
+            border: 2px solid transparent; user-select: none;
+        }
+        .memory-card:hover { border-color: var(--accent2); }
+        .memory-card.flipped { background: var(--accent); transform: rotateY(180deg); }
+        .memory-card.matched { background: var(--success); border-color: var(--success); }
+
+        /* Typing Test */
+        .typing-text {
+            background: var(--surface2); padding: 20px; border-radius: 12px;
+            font-size: 1.1rem; line-height: 1.8; margin-bottom: 15px;
+            word-spacing: 3px; letter-spacing: 0.5px;
+        }
+        .typing-text .correct { color: var(--success); }
+        .typing-text .incorrect { color: var(--danger); background: rgba(239,68,68,0.2); border-radius: 3px; }
+        .typing-text .current { border-bottom: 2px solid var(--accent2); }
+        #typingInput {
+            width: 100%; padding: 15px 20px; background: var(--surface2);
+            border: 2px solid var(--surface2); border-radius: 12px;
+            color: var(--text); font-size: 1.1rem; font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        #typingInput:focus { outline: none; border-color: var(--accent2); }
+
+        /* Coin Flip */
+        .coin {
+            width: 150px; height: 150px; border-radius: 50%; margin: 30px auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; font-weight: 900; cursor: pointer;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #78350f; transition: transform 0.3s;
+            box-shadow: 0 8px 30px rgba(245,158,11,0.3);
+        }
+        .coin:hover { transform: scale(1.1); }
+        .coin.flipping { animation: coinFlip 0.6s ease-in-out; }
+        @keyframes coinFlip {
+            0% { transform: rotateX(0); }
+            50% { transform: rotateX(900deg) scale(0.8); }
+            100% { transform: rotateX(1800deg); }
+        }
+        .coin-result { text-align: center; font-size: 1.5rem; font-weight: 700; margin: 10px 0; min-height: 40px; }
+
+        /* Dice Roll */
+        .dice-container { display: flex; gap: 20px; justify-content: center; margin: 20px 0; flex-wrap: wrap; }
+        .dice {
+            width: 100px; height: 100px; background: #fff; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.5rem; font-weight: 900; color: var(--bg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); transition: all 0.3s;
+        }
+        .dice.rolling { animation: diceRoll 0.5s ease-in-out; }
+        @keyframes diceRoll {
+            0%, 100% { transform: rotate(0); }
+            25% { transform: rotate(15deg) scale(1.1); }
+            50% { transform: rotate(-15deg) scale(0.9); }
+            75% { transform: rotate(10deg) scale(1.05); }
+        }
+
+        /* Number Guess */
+        .guess-input {
+            width: 200px; padding: 15px; background: var(--surface2); border: 2px solid var(--surface2);
+            border-radius: 12px; color: var(--text); font-size: 1.5rem; font-weight: 700;
+            text-align: center; font-family: inherit;
+        }
+        .guess-input:focus { outline: none; border-color: var(--accent2); }
+        .guess-hint {
+            text-align: center; font-size: 1.2rem; font-weight: 600;
+            margin: 15px 0; min-height: 30px;
+        }
+        .guess-history { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 15px; }
+        .guess-tag {
+            padding: 5px 14px; background: var(--surface2); border-radius: 20px;
+            font-size: 0.85rem; font-weight: 600;
+        }
+        .guess-tag.high { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .guess-tag.low { background: rgba(59,130,246,0.2); color: #60a5fa; }
+        .guess-tag.win { background: rgba(34,197,94,0.2); color: var(--success); }
+
+        .text-center { text-align: center; }
+        .mt-15 { margin-top: 15px; }
+        .flex-center { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 2rem; }
+            .ttt-board { grid-template-columns: repeat(3, 90px); }
+            .ttt-cell { width: 90px; height: 90px; font-size: 2rem; }
+            .memory-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+            .memory-card { font-size: 1.3rem; }
+            .mole-grid { gap: 8px; }
+            .mole-hole { font-size: 2rem; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div>
+    </div>
+    <div class="app-container">
+        <header>
+            <h1>🎮 TimePass Hub</h1>
+            <p>Pick an activity and kill some time!</p>
+        </header>
+        <nav class="activity-nav">
+            <button class="nav-btn active" onclick="showActivity('bubble', this)"><span class="emoji">🫧</span> Bubble Pop</button>
+            <button class="nav-btn" onclick="showActivity('draw', this)"><span class="emoji">🎨</span> Draw</button>
+            <button class="nav-btn" onclick="showActivity('reaction', this)"><span class="emoji">⚡</span> Reaction</button>
+            <button class="nav-btn" onclick="showActivity('color', this)"><span class="emoji">🎯</span> Color Match</button>
+            <button class="nav-btn" onclick="showActivity('ttt', this)"><span class="emoji">❌</span> Tic Tac Toe</button>
+            <button class="nav-btn" onclick="showActivity('mole', this)"><span class="emoji">🐹</span> Whack-a-Mole</button>
+            <button class="nav-btn" onclick="showActivity('memory', this)"><span class="emoji">🧠</span> Memory</button>
+            <button class="nav-btn" onclick="showActivity('typing', this)"><span class="emoji">⌨️</span> Typing</button>
+            <button class="nav-btn" onclick="showActivity('coin', this)"><span class="emoji">🪙</span> Coin Flip</button>
+            <button class="nav-btn" onclick="showActivity('dice', this)"><span class="emoji">🎲</span> Dice Roll</button>
+            <button class="nav-btn" onclick="showActivity('guess', this)"><span class="emoji">🔢</span> Number Guess</button>
+        </nav>
+
+        <div class="activity-container">
+            <!-- Bubble Pop -->
+            <div id="panel-bubble" class="activity-panel active">
+                <div class="card">
+                    <h2>🫧 Bubble Pop</h2>
+                    <p>Click the bubbles before they float away! How many can you pop?</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="bubbleScore">0</div><div class="label">Score</div></div>
+                        <div class="stat-box"><div class="val" id="bubbleTime">30</div><div class="label">Seconds</div></div>
+                        <div class="stat-box"><div class="val" id="bubbleBest">0</div><div class="label">Best</div></div>
+                    </div>
+                    <canvas id="bubbleCanvas"></canvas>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startBubbleGame()">Start Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drawing Pad -->
+            <div id="panel-draw" class="activity-panel">
+                <div class="card">
+                    <h2>🎨 Drawing Pad</h2>
+                    <p>Express yourself! Draw anything you like.</p>
+                    <div class="draw-controls">
+                        <button class="color-btn active" style="background:#fff" onclick="setDrawColor('#ffffff', this)"></button>
+                        <button class="color-btn" style="background:#ef4444" onclick="setDrawColor('#ef4444', this)"></button>
+                        <button class="color-btn" style="background:#3b82f6" onclick="setDrawColor('#3b82f6', this)"></button>
+                        <button class="color-btn" style="background:#22c55e" onclick="setDrawColor('#22c55e', this)"></button>
+                        <button class="color-btn" style="background:#f59e0b" onclick="setDrawColor('#f59e0b', this)"></button>
+                        <button class="color-btn" style="background:#a855f7" onclick="setDrawColor('#a855f7', this)"></button>
+                        <button class="color-btn" style="background:#ec4899" onclick="setDrawColor('#ec4899', this)"></button>
+                        <input type="range" class="brush-size" min="1" max="30" value="4" id="brushSize" title="Brush Size">
+                        <button class="btn btn-secondary" onclick="clearCanvas()">🗑️ Clear</button>
+                    </div>
+                    <canvas id="drawCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Reaction Test -->
+            <div id="panel-reaction" class="activity-panel">
+                <div class="card">
+                    <h2>⚡ Reaction Time Test</h2>
+                    <p>Wait for green, then click as fast as you can!</p>
+                    <div class="score-display" id="reactionResult">---</div>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="reactionAvg">---</div><div class="label">Average</div></div>
+                        <div class="stat-box"><div class="val" id="reactionBest">---</div><div class="label">Best</div></div>
+                        <div class="stat-box"><div class="val" id="reactionAttempts">0</div><div class="label">Attempts</div></div>
+                    </div>
+                    <div class="reaction-box idle" id="reactionBox" onclick="reactionClick()">
+                        Click to Start
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Match -->
+            <div id="panel-color" class="activity-panel">
+                <div class="card">
+                    <h2>🎯 Color Match</h2>
+                    <p>Find the tile that matches the target color name!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="colorScore">0</div><div class="label">Score</div></div>
+                        <div class="stat-box"><div class="val" id="colorStreak">0</div><div class="label">Streak</div></div>
+                        <div class="stat-box"><div class="val" id="colorTimer">30</div><div class="label">Time</div></div>
+                    </div>
+                    <div id="colorTarget" style="text-align:center;font-size:1.3rem;font-weight:700;margin:10px 0;"></div>
+                    <div class="color-grid" id="colorGrid"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startColorGame()">Start Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tic Tac Toe -->
+            <div id="panel-ttt" class="activity-panel">
+                <div class="card">
+                    <h2>❌⭕ Tic Tac Toe</h2>
+                    <p>Play against a friend!</p>
+                    <div class="ttt-status" id="tttStatus">X's Turn</div>
+                    <div class="ttt-board" id="tttBoard"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="resetTTT()">New Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Whack-a-Mole -->
+            <div id="panel-mole" class="activity-panel">
+                <div class="card">
+                    <h2>🐹 Whack-a-Mole</h2>
+                    <p>Whack the moles as they pop up!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="moleScore">0</div><div class="label">Score</div></div>
+                        <div class="stat-box"><div class="val" id="moleTime">30</div><div class="label">Time</div></div>
+                        <div class="stat-box"><div class="val" id="moleBest">0</div><div class="label">Best</div></div>
+                    </div>
+                    <div class="mole-grid" id="moleGrid"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startMoleGame()">Start Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory -->
+            <div id="panel-memory" class="activity-panel">
+                <div class="card">
+                    <h2>🧠 Memory Game</h2>
+                    <p>Find all matching pairs!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="memoryMoves">0</div><div class="label">Moves</div></div>
+                        <div class="stat-box"><div class="val" id="memoryPairs">0</div><div class="label">Pairs</div></div>
+                    </div>
+                    <div class="memory-grid" id="memoryGrid"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="startMemoryGame()">New Game</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing -->
+            <div id="panel-typing" class="activity-panel">
+                <div class="card">
+                    <h2>⌨️ Typing Speed Test</h2>
+                    <p>Type the text below as fast and accurately as you can!</p>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="typingWPM">0</div><div class="label">WPM</div></div>
+                        <div class="stat-box"><div class="val" id="typingAccuracy">100%</div><div class="label">Accuracy</div></div>
+                        <div class="stat-box"><div class="val" id="typingTime">0</div><div class="label">Seconds</div></div>
+                    </div>
+                    <div class="typing-text" id="typingText"></div>
+                    <input type="text" id="typingInput" placeholder="Start typing here..." oninput="handleTyping()" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="resetTyping()">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coin Flip -->
+            <div id="panel-coin" class="activity-panel">
+                <div class="card">
+                    <h2>🪙 Coin Flip</h2>
+                    <p>Click the coin to flip it!</p>
+                    <div class="coin-result" id="coinResult"></div>
+                    <div class="coin" id="coinEl" onclick="flipCoin()">🪙</div>
+                    <div class="stats-row">
+                        <div class="stat-box"><div class="val" id="coinHeads">0</div><div class="label">Heads</div></div>
+                        <div class="stat-box"><div class="val" id="coinTails">0</div><div class="label">Tails</div></div>
+                        <div class="stat-box"><div class="val" id="coinTotal">0</div><div class="label">Total</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dice Roll -->
+            <div id="panel-dice" class="activity-panel">
+                <div class="card">
+                    <h2>🎲 Dice Roller</h2>
+                    <p>Roll the dice and see what you get!</p>
+                    <div class="dice-container" id="diceContainer"></div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="rollDice()">🎲 Roll Dice</button>
+                    </div>
+                    <div class="stats-row mt-15">
+                        <div class="stat-box"><div class="val" id="diceTotal">0</div><div class="label">Total Rolled</div></div>
+                        <div class="stat-box"><div class="val" id="diceHighest">0</div><div class="label">Highest</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Number Guess -->
+            <div id="panel-guess" class="activity-panel">
+                <div class="card">
+                    <h2>🔢 Number Guess</h2>
+                    <p>I'm thinking of a number between 1 and 100. Can you guess it?</p>
+                    <div class="score-display" id="guessRange">1 - 100</div>
+                    <div class="guess-hint" id="guessHint">Make your first guess!</div>
+                    <div class="text-center">
+                        <input type="number" class="guess-input" id="guessInput" min="1" max="100" placeholder="?" onkeydown="if(event.key==='Enter')makeGuess()">
+                    </div>
+                    <div class="text-center mt-15">
+                        <button class="btn btn-primary" onclick="makeGuess()">Guess</button>
+                        <button class="btn btn-secondary" onclick="resetGuess()">New Game</button>
+                    </div>
+                    <div class="guess-history" id="guessHistory"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Инициализация Telegram Mini App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // Растягиваем на весь экран
+        
+        // При изменении темы можно принудительно обновить стили (CSS переменные уже подхватятся)
+        tg.onEvent('themeChanged', () => {
+            // Просто перерисовываем canvas при необходимости
+            if (document.getElementById('panel-bubble').classList.contains('active')) {
+                resizeBubbleCanvas();
+                if (bubbleGameActive) {
+                    // Обновить отрисовку пузырей
+                    cancelAnimationFrame(bubbleAnimFrame);
+                    drawBubbles();
+                }
+            }
+            if (document.getElementById('panel-draw').classList.contains('active')) {
+                resizeDrawCanvas();
+            }
+        });
+        
+        // Поддержка кнопки "Назад" в Telegram
+        tg.BackButton.onClick(() => {
+            // Можно реализовать логику, но по умолчанию закрываем приложение
+            tg.close();
+        });
+        // Показываем кнопку назад (опционально, если есть куда возвращаться)
+        // tg.BackButton.show();
+        
+        // Остальной код без изменений, кроме использования переменных темы и корректировки canvas
+        // ===== Navigation =====
+        function showActivity(name, btnElement) {
+            document.querySelectorAll('.activity-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('panel-' + name).classList.add('active');
+            if (btnElement) btnElement.classList.add('active');
+            if (name === 'bubble') setTimeout(resizeBubbleCanvas, 50);
+            if (name === 'draw') setTimeout(resizeDrawCanvas, 50);
+        }
+
+        // ===== Bubble Pop =====
+        let bubbleScore = 0, bubbleTimer = 30, bubbleInterval, bubbleAnimFrame;
+        let bubbleBest = 0;
+        const bubbleCanvas = document.getElementById('bubbleCanvas');
+        const bubbleCtx = bubbleCanvas.getContext('2d');
+        let bubbles = [], bubbleGameActive = false;
+
+        function resizeBubbleCanvas() {
+            const rect = bubbleCanvas.getBoundingClientRect();
+            bubbleCanvas.width = rect.width || 860;
+            bubbleCanvas.height = 450;
+        }
+        window.addEventListener('load', () => {
+            resizeBubbleCanvas();
+            resizeDrawCanvas();
+        });
+        window.addEventListener('resize', () => {
+            resizeBubbleCanvas();
+            resizeDrawCanvas();
+        });
+        setTimeout(resizeBubbleCanvas, 100);
+
+        function createBubble() {
+            if (!bubbleGameActive) return;
+            const colors = ['#7c3aed','#ec4899','#06b6d4','#f59e0b','#22c55e','#ef4444','#8b5cf6','#f97316'];
+            const size = 30 + Math.random() * 40;
+            bubbles.push({
+                x: Math.random() * (bubbleCanvas.width - size * 2) + size,
+                y: bubbleCanvas.height + size,
+                size, speed: 1 + Math.random() * 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: 0.02 + Math.random() * 0.03
+            });
+            setTimeout(createBubble, 300 + Math.random() * 400);
+        }
+
+        function drawBubbles() {
+            bubbleCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+            bubbles = bubbles.filter(b => {
+                b.y -= b.speed;
+                b.wobble += b.wobbleSpeed;
+                b.x += Math.sin(b.wobble) * 1.5;
+                bubbleCtx.beginPath();
+                bubbleCtx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                bubbleCtx.fillStyle = b.color + '88';
+                bubbleCtx.fill();
+                bubbleCtx.strokeStyle = b.color;
+                bubbleCtx.lineWidth = 2;
+                bubbleCtx.stroke();
+                bubbleCtx.beginPath();
+                bubbleCtx.arc(b.x - b.size * 0.3, b.y - b.size * 0.3, b.size * 0.15, 0, Math.PI * 2);
+                bubbleCtx.fillStyle = 'rgba(255,255,255,0.5)';
+                bubbleCtx.fill();
+                return b.y + b.size > 0;
+            });
+            bubbleAnimFrame = requestAnimationFrame(drawBubbles);
+        }
+
+        bubbleCanvas.addEventListener('click', (e) => {
+            if (!bubbleGameActive) return;
+            const rect = bubbleCanvas.getBoundingClientRect();
+            const scaleX = bubbleCanvas.width / rect.width;
+            const scaleY = bubbleCanvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                const dx = mx - b.x, dy = my - b.y;
+                if (dx * dx + dy * dy < b.size * b.size) {
+                    bubbles.splice(i, 1);
+                    bubbleScore += Math.round(50 / b.size * 10);
+                    document.getElementById('bubbleScore').textContent = bubbleScore;
+                    break;
+                }
+            }
+        });
+
+        function startBubbleGame() {
+            bubbleScore = 0; bubbleTimer = 30;
+            bubbles = []; bubbleGameActive = true;
+            document.getElementById('bubbleScore').textContent = '0';
+            document.getElementById('bubbleTime').textContent = '30';
+            clearInterval(bubbleInterval);
+            cancelAnimationFrame(bubbleAnimFrame);
+            resizeBubbleCanvas();
+            drawBubbles();
+            createBubble();
+            bubbleInterval = setInterval(() => {
+                bubbleTimer--;
+                document.getElementById('bubbleTime').textContent = bubbleTimer;
+                if (bubbleTimer <= 0) {
+                    bubbleGameActive = false;
+                    clearInterval(bubbleInterval);
+                    cancelAnimationFrame(bubbleAnimFrame);
+                    bubbleCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+                    bubbleCtx.fillStyle = 'rgba(0,0,0,0.6)';
+                    bubbleCtx.fillRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+                    bubbleCtx.fillStyle = '#fff';
+                    bubbleCtx.font = 'bold 36px Inter';
+                    bubbleCtx.textAlign = 'center';
+                    bubbleCtx.fillText(`Score: ${bubbleScore}`, bubbleCanvas.width/2, bubbleCanvas.height/2);
+                    if (bubbleScore > bubbleBest) {
+                        bubbleBest = bubbleScore;
+                        document.getElementById('bubbleBest').textContent = bubbleBest;
+                    }
+                }
+            }, 1000);
+        }
+
+        // ===== Drawing Pad =====
+        const drawCanvas = document.getElementById('drawCanvas');
+        const drawCtx = drawCanvas.getContext('2d');
+        let drawing = false, drawColor = '#ffffff';
+
+        function resizeDrawCanvas() {
+            const rect = drawCanvas.getBoundingClientRect();
+            drawCanvas.width = rect.width || 860;
+            drawCanvas.height = 450;
+            drawCtx.lineCap = 'round'; drawCtx.lineJoin = 'round';
+        }
+        setTimeout(resizeDrawCanvas, 100);
+
+        function getDrawPos(e) {
+            const rect = drawCanvas.getBoundingClientRect();
+            const touch = e.touches ? e.touches[0] : e;
+            const scaleX = drawCanvas.width / rect.width;
+            const scaleY = drawCanvas.height / rect.height;
+            return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+        }
+
+        drawCanvas.addEventListener('mousedown', (e) => { drawing = true; const p = getDrawPos(e); drawCtx.beginPath(); drawCtx.moveTo(p.x, p.y); });
+        drawCanvas.addEventListener('mousemove', (e) => { if (!drawing) return; const p = getDrawPos(e); drawCtx.strokeStyle = drawColor; drawCtx.lineWidth = document.getElementById('brushSize').value; drawCtx.lineTo(p.x, p.y); drawCtx.stroke(); });
+        drawCanvas.addEventListener('mouseup', () => drawing = false);
+        drawCanvas.addEventListener('mouseleave', () => drawing = false);
+        drawCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); drawing = true; const p = getDrawPos(e); drawCtx.beginPath(); drawCtx.moveTo(p.x, p.y); }, {passive:false});
+        drawCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); if (!drawing) return; const p = getDrawPos(e); drawCtx.strokeStyle = drawColor; drawCtx.lineWidth = document.getElementById('brushSize').value; drawCtx.lineTo(p.x, p.y); drawCtx.stroke(); }, {passive:false});
+        drawCanvas.addEventListener('touchend', () => drawing = false);
+
+        function setDrawColor(c, el) {
+            drawColor = c;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function clearCanvas() {
+            drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+        }
+
+        // ===== Reaction Test =====
+        let reactionState = 'idle', reactionTimeout, reactionStart, reactionTimes = [];
+
+        function reactionClick() {
+            const box = document.getElementById('reactionBox');
+            if (reactionState === 'idle' || reactionState === 'result') {
+                reactionState = 'waiting';
+                box.className = 'reaction-box waiting';
+                box.textContent = 'Wait for green...';
+                reactionTimeout = setTimeout(() => {
+                    reactionState = 'ready';
+                    box.className = 'reaction-box ready';
+                    box.textContent = 'CLICK NOW!';
+                    reactionStart = Date.now();
+                }, 1500 + Math.random() * 3000);
+            } else if (reactionState === 'waiting') {
+                clearTimeout(reactionTimeout);
+                reactionState = 'idle';
+                box.className = 'reaction-box too-soon';
+                box.textContent = 'Too soon! Click to try again';
+            } else if (reactionState === 'ready') {
+                const time = Date.now() - reactionStart;
+                reactionTimes.push(time);
+                reactionState = 'result';
+                box.className = 'reaction-box idle';
+                box.textContent = `${time}ms — Click to try again`;
+                document.getElementById('reactionResult').textContent = time + 'ms';
+                document.getElementById('reactionAttempts').textContent = reactionTimes.length;
+                const avg = Math.round(reactionTimes.reduce((a,b) => a+b, 0) / reactionTimes.length);
+                document.getElementById('reactionAvg').textContent = avg + 'ms';
+                const best = Math.min(...reactionTimes);
+                document.getElementById('reactionBest').textContent = best + 'ms';
+            }
+        }
+
+        // ===== Color Match =====
+        let colorScoreVal = 0, colorStreak = 0, colorTimerVal = 30, colorTimerInt, colorGameActive = false;
+        const colorNames = ['Red','Blue','Green','Yellow','Purple','Orange','Pink','Cyan','Lime','Coral','Teal','Gold','Violet','Indigo','Salmon'];
+        const colorHexes = ['#ef4444','#3b82f6','#22c55e','#eab308','#8b5cf6','#f97316','#ec4899','#06b6d4','#84cc16','#f87171','#14b8a6','#fbbf24','#a78bfa','#6366f1','#fb923c'];
+
+        function startColorGame() {
+            colorScoreVal = 0; colorStreak = 0; colorTimerVal = 30; colorGameActive = true;
+            document.getElementById('colorScore').textContent = '0';
+            document.getElementById('colorStreak').textContent = '0';
+            document.getElementById('colorTimer').textContent = '30';
+            clearInterval(colorTimerInt);
+            colorTimerInt = setInterval(() => {
+                colorTimerVal--;
+                document.getElementById('colorTimer').textContent = colorTimerVal;
+                if (colorTimerVal <= 0) {
+                    clearInterval(colorTimerInt);
+                    colorGameActive = false;
+                    document.getElementById('colorTarget').textContent = `Game Over! Score: ${colorScoreVal}`;
+                    document.getElementById('colorGrid').innerHTML = '';
+                }
+            }, 1000);
+            nextColorRound();
+        }
+
+        function nextColorRound() {
+            if (!colorGameActive) return;
+            const targetIdx = Math.floor(Math.random() * colorNames.length);
+            const shuffled = [...Array(colorHexes.length).keys()].sort(() => Math.random() - 0.5).slice(0, 6);
+            if (!shuffled.includes(targetIdx)) shuffled[Math.floor(Math.random() * 6)] = targetIdx;
+
+            document.getElementById('colorTarget').innerHTML = `Find: <span style="color:${colorHexes[targetIdx]}">${colorNames[targetIdx]}</span>`;
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+            shuffled.forEach((idx, i) => {
+                const tile = document.createElement('div');
+                tile.className = 'color-tile';
+                tile.style.background = colorHexes[idx];
+                tile.onclick = () => {
+                    if (!colorGameActive) return;
+                    if (idx === targetIdx) {
+                        tile.classList.add('correct');
+                        colorScoreVal += 10 + colorStreak * 2;
+                        colorStreak++;
+                        document.getElementById('colorScore').textContent = colorScoreVal;
+                        document.getElementById('colorStreak').textContent = colorStreak;
+                        setTimeout(nextColorRound, 400);
+                    } else {
+                        tile.classList.add('wrong');
+                        colorStreak = 0;
+                        document.getElementById('colorStreak').textContent = '0';
+                    }
+                };
+                grid.appendChild(tile);
+            });
+        }
+
+        // ===== Tic Tac Toe =====
+        let tttBoard, tttTurn, tttGameOver;
+        function resetTTT() {
+            tttBoard = Array(9).fill(null); tttTurn = 'X'; tttGameOver = false;
+            document.getElementById('tttStatus').textContent = "X's Turn";
+            const board = document.getElementById('tttBoard');
+            board.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('button');
+                cell.className = 'ttt-cell';
+                cell.onclick = () => tttMove(i);
+                board.appendChild(cell);
+            }
+        }
+        function tttMove(i) {
+            if (tttBoard[i] || tttGameOver) return;
+            tttBoard[i] = tttTurn;
+            const cells = document.querySelectorAll('.ttt-cell');
+            cells[i].textContent = tttTurn;
+            cells[i].classList.add(tttTurn.toLowerCase());
+            const winner = checkTTTWin();
+            if (winner) {
+                tttGameOver = true;
+                document.getElementById('tttStatus').textContent = `${winner} Wins! 🎉`;
+                return;
+            }
+            if (tttBoard.every(c => c)) {
+                tttGameOver = true;
+                document.getElementById('tttStatus').textContent = "It's a Draw! 🤝";
+                return;
+            }
+            tttTurn = tttTurn === 'X' ? 'O' : 'X';
+            document.getElementById('tttStatus').textContent = `${tttTurn}'s Turn`;
+        }
+        function checkTTTWin() {
+            const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for (const [a,b,c] of lines) {
+                if (tttBoard[a] && tttBoard[a] === tttBoard[b] && tttBoard[b] === tttBoard[c]) return tttBoard[a];
+            }
+            return null;
+        }
+        resetTTT();
+
+        // ===== Whack-a-Mole =====
+        let moleScoreVal = 0, moleTimerVal = 30, moleInterval, molePopInterval, moleGameActive = false, moleBest = 0;
+
+        function startMoleGame() {
+            moleScoreVal = 0; moleTimerVal = 30; moleGameActive = true;
+            document.getElementById('moleScore').textContent = '0';
+            document.getElementById('moleTime').textContent = '30';
+            clearInterval(moleInterval); clearInterval(molePopInterval);
+            const grid = document.getElementById('moleGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'mole-hole';
+                hole.id = 'mole-' + i;
+                hole.textContent = '🕳️';
+                hole.onclick = () => whackMole(i);
+                grid.appendChild(hole);
+            }
+            molePopInterval = setInterval(popMole, 800);
+            moleInterval = setInterval(() => {
+                moleTimerVal--;
+                document.getElementById('moleTime').textContent = moleTimerVal;
+                if (moleTimerVal <= 0) {
+                    moleGameActive = false;
+                    clearInterval(moleInterval); clearInterval(molePopInterval);
+                    if (moleScoreVal > moleBest) {
+                        moleBest = moleScoreVal;
+                        document.getElementById('moleBest').textContent = moleBest;
+                    }
+                    document.getElementById('moleGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;font-size:1.5rem;font-weight:700;">Game Over! Score: ${moleScoreVal}</div>`;
+                }
+            }, 1000);
+        }
+
+        let activeMole = -1;
+        function popMole() {
+            if (!moleGameActive) return;
+            document.querySelectorAll('.mole-hole').forEach(h => { h.classList.remove('active'); h.textContent = '🕳️'; });
+            activeMole = Math.floor(Math.random() * 9);
+            const hole = document.getElementById('mole-' + activeMole);
+            hole.classList.add('active');
+            hole.textContent = '🐹';
+        }
+
+        function whackMole(i) {
+            if (!moleGameActive || i !== activeMole) return;
+            const hole = document.getElementById('mole-' + i);
+            hole.classList.remove('active');
+            hole.classList.add('hit');
+            hole.textContent = '💥';
+            moleScoreVal += 10;
+            document.getElementById('moleScore').textContent = moleScoreVal;
+            activeMole = -1;
+            setTimeout(() => { hole.classList.remove('hit'); hole.textContent = '🕳️'; }, 300);
+        }
+
+        // ===== Memory Game =====
+        let memoryCards, memoryFlipped, memoryMatched, memoryMoves, memoryLocked;
+        const memoryEmojis = ['🎮','🎲','🎯','🎪','🎨','🎭','🎵','🎸'];
+
+        function startMemoryGame() {
+            memoryMoves = 0; memoryMatched = 0; memoryFlipped = []; memoryLocked = false;
+            document.getElementById('memoryMoves').textContent = '0';
+            document.getElementById('memoryPairs').textContent = '0';
+            const pairs = [...memoryEmojis, ...memoryEmojis];
+            memoryCards = pairs.sort(() => Math.random() - 0.5);
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+            memoryCards.forEach((emoji, i) => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.dataset.index = i;
+                card.dataset.emoji = emoji;
+                card.textContent = '❓';
+                card.onclick = () => flipMemoryCard(i);
+                grid.appendChild(card);
+            });
+        }
+
+        function flipMemoryCard(i) {
+            if (memoryLocked) return;
+            const cards = document.querySelectorAll('.memory-card');
+            const card = cards[i];
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            card.classList.add('flipped');
+            card.textContent = card.dataset.emoji;
+            memoryFlipped.push({ index: i, card, emoji: card.dataset.emoji });
+            if (memoryFlipped.length === 2) {
+                memoryMoves++;
+                document.getElementById('memoryMoves').textContent = memoryMoves;
+                memoryLocked = true;
+                const [a, b] = memoryFlipped;
+                if (a.emoji === b.emoji) {
+                    a.card.classList.add('matched');
+                    b.card.classList.add('matched');
+                    memoryMatched++;
+                    document.getElementById('memoryPairs').textContent = memoryMatched;
+                    memoryFlipped = [];
+                    memoryLocked = false;
+                    if (memoryMatched === memoryEmojis.length) {
+                        setTimeout(() => alert(`🎉 You won in ${memoryMoves} moves!`), 300);
+                    }
+                } else {
+                    setTimeout(() => {
+                        a.card.classList.remove('flipped'); a.card.textContent = '❓';
+                        b.card.classList.remove('flipped'); b.card.textContent = '❓';
+                        memoryFlipped = [];
+                        memoryLocked = false;
+                    }, 800);
+                }
+            }
+        }
+        startMemoryGame();
+
+        // ===== Typing Test =====
+        const typingTexts = [
+            "The quick brown fox jumps over the lazy dog near the riverbank on a sunny afternoon",
+            "Programming is the art of telling a computer what to do step by step with precision",
+            "Time flies when you are having fun playing games and exploring new things online",
+            "The mountains stood tall against the sky while the wind whispered through the trees",
+            "Learning to code opens up a world of possibilities and creative problem solving skills"
+        ];
+        let currentText, typingStart, typingActive = false, correctChars = 0;
+
+        function resetTyping() {
+            currentText = typingTexts[Math.floor(Math.random() * typingTexts.length)];
+            typingStart = null; typingActive = false; correctChars = 0;
+            document.getElementById('typingWPM').textContent = '0';
+            document.getElementById('typingAccuracy').textContent = '100%';
+            document.getElementById('typingTime').textContent = '0';
+            document.getElementById('typingInput').value = '';
+            document.getElementById('typingInput').disabled = false;
+            renderTypingText('');
+        }
+
+        function renderTypingText(typed) {
+            const el = document.getElementById('typingText');
+            let html = '';
+            for (let i = 0; i < currentText.length; i++) {
+                if (i < typed.length) {
+                    html += typed[i] === currentText[i]
+                        ? `<span class="correct">${currentText[i]}</span>`
+                        : `<span class="incorrect">${currentText[i]}</span>`;
+                } else if (i === typed.length) {
+                    html += `<span class="current">${currentText[i]}</span>`;
+                } else {
+                    html += currentText[i];
+                }
+            }
+            el.innerHTML = html;
+        }
+
+        function handleTyping() {
+            const input = document.getElementById('typingInput');
+            if (!typingStart) { typingStart = Date.now(); typingActive = true; }
+            renderTypingText(input.value);
+            correctChars = 0;
+            for (let i = 0; i < input.value.length; i++) {
+                if (input.value[i] === currentText[i]) correctChars++;
+            }
+            const elapsed = (Date.now() - typingStart) / 1000;
+            const mins = elapsed / 60;
+            const wpm = mins > 0 ? Math.round((correctChars / 5) / mins) : 0;
+            const accuracy = input.value.length > 0 ? Math.round((correctChars / input.value.length) * 100) : 100;
+            document.getElementById('typingWPM').textContent = wpm;
+            document.getElementById('typingAccuracy').textContent = accuracy + '%';
+            document.getElementById('typingTime').textContent = Math.round(elapsed);
+            if (input.value.length >= currentText.length) {
+                typingActive = false;
+                document.getElementById('typingInput').disabled = true;
+            }
+        }
+        resetTyping();
+
+        // ===== Coin Flip =====
+        let headsCount = 0, tailsCount = 0;
+        function flipCoin() {
+            const coin = document.getElementById('coinEl');
+            const result = document.getElementById('coinResult');
+            coin.classList.remove('flipping');
+            void coin.offsetWidth;
+            coin.classList.add('flipping');
+            result.textContent = '';
+            setTimeout(() => {
+                const isHeads = Math.random() > 0.5;
+                if (isHeads) { headsCount++; coin.textContent = '👑'; result.textContent = '👑 HEADS!'; }
+                else { tailsCount++; coin.textContent = '🌊'; result.textContent = '🌊 TAILS!'; }
+                document.getElementById('coinHeads').textContent = headsCount;
+                document.getElementById('coinTails').textContent = tailsCount;
+                document.getElementById('coinTotal').textContent = headsCount + tailsCount;
+            }, 600);
+        }
+
+        // ===== Dice Roll =====
+        const diceFaces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+        let diceTotalRolls = 0, diceHighestRoll = 0;
+
+        function rollDice() {
+            const container = document.getElementById('diceContainer');
+            container.innerHTML = '';
+            const numDice = 2;
+            for (let i = 0; i < numDice; i++) {
+                const dice = document.createElement('div');
+                dice.className = 'dice rolling';
+                const val = Math.floor(Math.random() * 6) + 1;
+                dice.textContent = diceFaces[val - 1];
+                setTimeout(() => dice.classList.remove('rolling'), 500);
+                container.appendChild(dice);
+            }
+            const singleTotal = Array.from(container.children).reduce((s, d) => {
+                return s + (diceFaces.indexOf(d.textContent) + 1);
+            }, 0);
+            diceTotalRolls += singleTotal;
+            if (singleTotal > diceHighestRoll) diceHighestRoll = singleTotal;
+            document.getElementById('diceTotal').textContent = diceTotalRolls;
+            document.getElementById('diceHighest').textContent = diceHighestRoll;
+        }
+        rollDice();
+
+        // ===== Number Guess =====
+        let secretNum, guessAttempts, guessLow, guessHigh;
+        function resetGuess() {
+            secretNum = Math.floor(Math.random() * 100) + 1;
+            guessAttempts = 0; guessLow = 1; guessHigh = 100;
+            document.getElementById('guessRange').textContent = '1 - 100';
+            document.getElementById('guessHint').textContent = 'Make your first guess!';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessHistory').innerHTML = '';
+            document.getElementById('guessInput').disabled = false;
+        }
+        function makeGuess() {
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+            if (isNaN(guess) || guess < 1 || guess > 100) return;
+            input.value = '';
+            guessAttempts++;
+            const hint = document.getElementById('guessHint');
+            const history = document.getElementById('guessHistory');
+            if (guess === secretNum) {
+                hint.textContent = `🎉 Correct! It was ${secretNum}! (${guessAttempts} attempts)`;
+                history.innerHTML += `<span class="guess-tag win">${guess} ✓</span>`;
+                document.getElementById('guessInput').disabled = true;
+            } else if (guess < secretNum) {
+                hint.textContent = '📈 Higher!';
+                history.innerHTML += `<span class="guess-tag low">${guess} ↑</span>`;
+                if (guess >= guessLow) guessLow = guess + 1;
+            } else {
+                hint.textContent = '📉 Lower!';
+                history.innerHTML += `<span class="guess-tag high">${guess} ↓</span>`;
+                if (guess <= guessHigh) guessHigh = guess - 1;
+            }
+            document.getElementById('guessRange').textContent = `${guessLow} - ${guessHigh}`;
+        }
+        resetGuess();
+    </script>
+</body>
+</html>
